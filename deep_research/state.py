@@ -1,53 +1,55 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping
+from deepagents.state import DeepAgentState
 
 # Virtual filesystem helpers
 from .utils import file_system as vfs
 
 
-@dataclass
-class ResearchFlowState:
+class ResearchFlowState(DeepAgentState):
     """
-    Minimal state container for the Deep Research flow.
+    State container for the Deep Research flow that extends DeepAgentState.
 
-    - files: in-memory virtual filesystem {path: content}
+    - files: in-memory virtual filesystem {path: content} (inherited from DeepAgentState)
+    - todos: task tracking (inherited from DeepAgentState)
     """
-    files: Dict[str, str] = field(default_factory=dict)
+    pass  # files field is already defined in DeepAgentState
 
-    # ---- Virtual FS convenience methods ----
-    def read_text(self, path: str, *, default: str = "") -> str:
-        return vfs.read_text(self.files, path, default=default)
+    pass  # All methods will be utility functions since TypedDict doesn't support methods
 
-    def write_text(self, path: str, content: str) -> ResearchFlowState:
-        vfs.write_text(self.files, path, content)
-        return self
 
-    def read_json(self, path: str, default=None) -> Any:
-        return vfs.read_json(self.files, path, default=default)
+# ---- Utility functions for ResearchFlowState ----
+def read_text(state: ResearchFlowState, path: str, *, default: str = "") -> str:
+    return vfs.read_text(state.get("files", {}), path, default=default)
 
-    def write_json(self, path: str, obj: Any) -> ResearchFlowState:
-        vfs.write_json(self.files, path, obj)
-        return self
 
-    def list_files(self, prefix: str = "") -> Dict[str, str]:
-        return vfs.list_files(self.files, prefix)
+def write_text(state: ResearchFlowState, path: str, content: str) -> None:
+    files = dict(state.get("files", {}))
+    vfs.write_text(files, path, content)
+    state["files"] = files
 
-    def merge_files(self, other: Mapping[str, str] | None) -> ResearchFlowState:
-        """
-        Merge another files mapping into this state.
-        New entries overwrite existing ones (last-write-wins).
-        """
-        if other:
-            self.files.update(other)
-        return self
 
-    # ---- Interop helpers (for LangGraph / DeepAgents dict-style state) ----
-    def to_state(self) -> Dict[str, Any]:
-        return {"files": dict(self.files)}
+def read_json(state: ResearchFlowState, path: str, default=None) -> Any:
+    return vfs.read_json(state.get("files", {}), path, default=default)
 
-    @classmethod
-    def from_state(cls, state: Mapping[str, Any] | None) -> ResearchFlowState:
-        state = state or {}
-        files = dict(state.get("files") or {})
-        return cls(files=files)
+
+def write_json(state: ResearchFlowState, path: str, obj: Any) -> None:
+    files = dict(state.get("files", {}))
+    vfs.write_json(files, path, obj)
+    state["files"] = files
+
+
+def list_files(state: ResearchFlowState, prefix: str = "") -> Dict[str, str]:
+    return vfs.list_files(state.get("files", {}), prefix)
+
+
+def merge_files(state: ResearchFlowState, other: Mapping[str, str] | None) -> None:
+    """
+    Merge another files mapping into this state.
+    New entries overwrite existing ones (last-write-wins).
+    """
+    if other:
+        files = dict(state.get("files", {}))
+        files.update(other)
+        state["files"] = files
