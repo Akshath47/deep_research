@@ -112,3 +112,114 @@ graph TD
     FactChecker -->|factcheck_notes.md| Synthesizer
     Synthesizer -->|draft_report.md| Reviewer
     Reviewer -->|final_paper.md + gap_list.json| UserOutput[Final Output]
+
+
+## 🔹 Coding Plan
+
+# --- 1. Define the State ---
+class ResearchFlowState(DeepAgentState):
+    files: dict[str, str] = {}
+
+    # Helpers
+    def read_json(self, path):
+        return json.loads(self.files.get(path, "[]"))
+
+    def write_json(self, path, obj):
+        self.files[path] = json.dumps(obj, indent=2)
+
+    def read_text(self, path):
+        return self.files.get(path, "")
+
+    def write_text(self, path, content):
+        self.files[path] = content
+
+
+# --- 2. Agents ---
+# (clarifier_agent, decomposer_agent, strategist_agent,
+#  researcher_agent, factchecker_agent, synthesizer_agent, reviewer_agent)
+# ... same as before ...
+
+
+# --- 3. Node Runners ---
+def run_clarifier(state: ResearchFlowState):
+    return {"files": clarifier_agent.invoke(state)["files"]}
+
+def run_decomposer(state: ResearchFlowState):
+    return {"files": decomposer_agent.invoke(state)["files"]}
+
+def run_strategist(state: ResearchFlowState):
+    return {"files": strategist_agent.invoke(state)["files"]}
+
+def run_fact_checker(state: ResearchFlowState):
+    return {"files": factchecker_agent.invoke(state)["files"]}
+
+def run_synthesizer(state: ResearchFlowState):
+    return {"files": synthesizer_agent.invoke(state)["files"]}
+
+def run_reviewer(state: ResearchFlowState):
+    return {"files": reviewer_agent.invoke(state)["files"]}
+
+
+# --- 4. Map–Reduce for ResearcherHub ---
+def map_each_subquery(state: ResearchFlowState):
+    subqueries = state.read_json("subqueries.json")
+    for idx, subq in enumerate(subqueries):
+        yield Send("map_researcher", {"subquery": subq, "index": idx})
+
+def run_researcher(state: ResearchFlowState, subquery: dict, index: int):
+    """
+    Each researcher_agent handles one subquery.
+    It should fetch multiple results → name files consistently:
+    - /raw_data/subquery{index}_result{k}.txt
+    - /summaries/subquery{index}_result{k}.md
+    """
+    result = researcher_agent.invoke({
+        "files": state.files,
+        "subquery": subquery,
+        "index": index,
+    })
+
+    # Suppose researcher_agent internally writes N results
+    # with the naming convention:
+    #   /raw_data/subquery{index}_result{n}.txt
+    #   /summaries/subquery{index}_result{n}.md
+
+    return {"files": result["files"]}
+
+def run_researcher_merge(state: ResearchFlowState, inputs: list[dict]):
+    merged_files = dict(state.files)
+    for inp in inputs:
+        merged_files.update(inp["files"])
+    return {"files": merged_files}
+
+
+# --- 5. Build Graph ---
+workflow = StatefulGraph(ResearchFlowState)
+
+workflow.add_node("clarifier", run_clarifier)
+workflow.add_node("decomposer", run_decomposer)
+workflow.add_node("strategist", run_strategist)
+
+# ResearcherHub as subgraph
+researcher_hub = workflow.add_subgraph("researcher_hub")
+researcher_hub.add_node("map_researcher", run_researcher)
+researcher_hub.add_node("reduce_researcher", run_researcher_merge)
+researcher_hub.add_conditional_edges("map_researcher", map_each_subquery)
+researcher_hub.add_edge("map_researcher", "reduce_researcher")
+
+workflow.add_node("fact_checker", run_fact_checker)
+workflow.add_node("synthesizer", run_synthesizer)
+workflow.add_node("reviewer", run_reviewer)
+
+# --- 6. Define Flow ---
+workflow.set_entry_point("clarifier")
+workflow.add_edge("clarifier", "decomposer")
+workflow.add_edge("decomposer", "strategist")
+workflow.add_edge("strategist", "researcher_hub")
+workflow.add_edge("researcher_hub", "fact_checker")
+workflow.add_edge("fact_checker", "synthesizer")
+workflow.add_edge("synthesizer", "reviewer")
+workflow.add_edge("reviewer", END)
+
+# --- 7. Compile ---
+app = workflow.compile()
