@@ -1,0 +1,13 @@
+# Core deepagents package dependencies (from pyproject.toml)
+langgraph>=0.2.6
+langchain-anthropic>=0.1.23
+langchain>=0.2.14
+
+# LangGraph CLI and additional tools (from deep_research/requirements.txt)
+langgraph-cli[inmem]
+tavily-python
+langchain-openai
+python-dotenv
+
+# Development and local package installation
+-e .

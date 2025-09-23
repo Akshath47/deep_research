@@ -144,6 +144,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Project specific virtual environments (now using unified .venv in root)
+deep_research/.venv
+examples/research/.venv
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -213,3 +217,5 @@ __marimo__/
 examples/research/
 examples/
 examples
+
+.vscode/
