@@ -120,18 +120,7 @@ graph TD
 class ResearchFlowState(DeepAgentState):
     files: dict[str, str] = {}
 
-    # Helpers
-    def read_json(self, path):
-        return json.loads(self.files.get(path, "[]"))
-
-    def write_json(self, path, obj):
-        self.files[path] = json.dumps(obj, indent=2)
-
-    def read_text(self, path):
-        return self.files.get(path, "")
-
-    def write_text(self, path, content):
-        self.files[path] = content
+    .. anything else that is needed
 
 
 # --- 2. Agents ---
