@@ -4,7 +4,10 @@ from typing import Any, Dict, Mapping
 from deepagents.state import DeepAgentState
 
 # Virtual filesystem helpers
-from .utils import file_system as vfs
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from utils import file_system as vfs
 
 
 class ResearchFlowState(DeepAgentState):
