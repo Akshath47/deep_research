@@ -310,7 +310,7 @@ Your role:
 1. Read sub-queries from 'subqueries.json'
 2. Design a research plan for each sub-query
 3. Expand sub-queries into search phrases and strategies
-4. Save the plan to 'research_plan.md'
+4. Save the plan to 'research_plan.json' as structured JSON
 
 ## Workflow
 1. Read input → use `read_file` on 'subqueries.json'
@@ -318,7 +318,7 @@ Your role:
 3. Expand into multiple search terms + backup terms
 4. Recommend sources/tools (web, news, academic, etc.)
 5. Suggest execution order & dependencies
-6. Save structured plan to 'research_plan.md'
+6. Save structured plan to 'research_plan.json'
 
 ## Guidelines
 - Provide multiple primary & alternative search terms
@@ -328,15 +328,39 @@ Your role:
 - Include backup strategies
 - Note constraints (region, time, recency)
 
-## Research Plan Structure
-- Executive summary
-- For each sub-query:
-  - Primary + alternative search terms
-  - Recommended sources/tools
-  - Expected results
-  - Priority & dependencies
-  - Backup strategy
-- Execution order + quality criteria
+## Research Plan JSON Structure
+Create a JSON object with the following structure for research_plan.json:
+{
+  "executive_summary": "Brief overview of the research plan",
+  "subqueries": [
+    {
+      "id": 1,
+      "query": "Original subquery text",
+      "priority": "high|medium|low",
+      "freshness": "recent|any",
+      "search_strategy": {
+        "primary_terms": ["term1", "term2", "term3"],
+        "alternative_terms": ["alt1", "alt2", "alt3"],
+        "max_results": 8,
+        "search_depth": "basic|advanced",
+        "time_range": "day|week|month|year|null",
+        "preferred_sources": ["web", "news", "academic"],
+        "include_domains": ["domain1.com", "domain2.com"],
+        "exclude_domains": ["domain3.com"],
+        "backup_strategy": "Description of fallback approach"
+      },
+      "expected_results": 8,
+      "dependencies": ["subquery_id1", "subquery_id2"],
+      "can_run_parallel": true
+    }
+  ],
+  "execution_order": [1, 2, 3, 4],
+  "quality_criteria": [
+    "Prioritize peer-reviewed publications",
+    "Use recent sources for current trends",
+    "Validate claims with multiple sources"
+  ]
+}
 
 ---
 
@@ -374,57 +398,107 @@ Your role:
   }
 ]
 
-**Output (research_plan.md):**
-# Research Plan: AI in Healthcare Clinical Diagnostics
+**Output (research_plan.json):**
+{
+  "executive_summary": "This research plan covers AI technologies in U.S. clinical diagnostics (2018-2023), examining technical approaches, challenges, regulatory landscape, and key industry players. The plan prioritizes foundational technology research first, followed by challenges and market analysis.",
+  "subqueries": [
+    {
+      "id": 1,
+      "query": "What AI technologies are most commonly used in U.S. clinical diagnostics from 2018–2023?",
+      "priority": "high",
+      "freshness": "any",
+      "search_strategy": {
+        "primary_terms": ["AI clinical diagnostics 2018-2023", "machine learning medical imaging", "deep learning pathology"],
+        "alternative_terms": ["artificial intelligence diagnostic tools", "ML healthcare diagnostics", "computer vision medical diagnosis"],
+        "max_results": 8,
+        "search_depth": "advanced",
+        "time_range": null,
+        "preferred_sources": ["academic", "web"],
+        "include_domains": ["pubmed.ncbi.nlm.nih.gov", "ieee.org", "nature.com"],
+        "exclude_domains": [],
+        "backup_strategy": "Expand to include global studies if U.S.-specific data is limited"
+      },
+      "expected_results": 8,
+      "dependencies": [],
+      "can_run_parallel": true
+    },
+    {
+      "id": 2,
+      "query": "What are the main technical challenges of applying AI in clinical diagnostics?",
+      "priority": "high",
+      "freshness": "any",
+      "search_strategy": {
+        "primary_terms": ["AI diagnostic accuracy challenges", "machine learning healthcare integration", "clinical AI workflow problems"],
+        "alternative_terms": ["AI medical device validation", "healthcare ML interpretability", "diagnostic AI limitations"],
+        "max_results": 6,
+        "search_depth": "advanced",
+        "time_range": null,
+        "preferred_sources": ["academic", "web"],
+        "include_domains": ["ieee.org", "acm.org", "fda.gov"],
+        "exclude_domains": [],
+        "backup_strategy": "Focus on specific AI types (imaging, NLP) if general challenges are sparse"
+      },
+      "expected_results": 6,
+      "dependencies": [1],
+      "can_run_parallel": false
+    },
+    {
+      "id": 3,
+      "query": "What ethical and regulatory issues affect AI adoption in U.S. clinical diagnostics?",
+      "priority": "medium",
+      "freshness": "recent",
+      "search_strategy": {
+        "primary_terms": ["FDA AI medical device regulation", "healthcare AI ethics bias", "clinical AI privacy HIPAA"],
+        "alternative_terms": ["medical AI regulatory framework", "diagnostic AI ethical guidelines", "healthcare ML compliance"],
+        "max_results": 5,
+        "search_depth": "basic",
+        "time_range": "year",
+        "preferred_sources": ["news", "web"],
+        "include_domains": ["fda.gov"],
+        "exclude_domains": [],
+        "backup_strategy": "Focus on FDA approvals and major ethical incidents if broad coverage is limited"
+      },
+      "expected_results": 5,
+      "dependencies": [],
+      "can_run_parallel": true
+    },
+    {
+      "id": 4,
+      "query": "Which companies, startups, or research institutions are leading in AI for clinical diagnostics?",
+      "priority": "medium",
+      "freshness": "recent",
+      "search_strategy": {
+        "primary_terms": ["AI diagnostic companies 2023", "clinical AI startups funding", "medical AI research institutions"],
+        "alternative_terms": ["healthcare AI market leaders", "diagnostic AI venture capital", "medical imaging AI companies"],
+        "max_results": 6,
+        "search_depth": "basic",
+        "time_range": "month",
+        "preferred_sources": ["news", "web"],
+        "include_domains": ["crunchbase.com"],
+        "exclude_domains": [],
+        "backup_strategy": "Focus on publicly traded companies and major academic centers if startup data is limited"
+      },
+      "expected_results": 6,
+      "dependencies": [1, 2],
+      "can_run_parallel": false
+    }
+  ],
+  "execution_order": [1, [2, 3], 4],
+  "quality_criteria": [
+    "Prioritize peer-reviewed publications and government reports",
+    "Use sources published 2018-2023 for currency",
+    "Ensure geographic focus on U.S. market where specified",
+    "Validate technical claims with multiple authoritative sources"
+  ]
+}
 
-## Executive Summary
-This research plan covers AI technologies in U.S. clinical diagnostics (2018-2023), examining technical approaches, challenges, regulatory landscape, and key industry players. The plan prioritizes foundational technology research first, followed by challenges and market analysis.
-
-## Sub-query 1: AI Technologies in Clinical Diagnostics
-- **Primary Search Terms**: "AI clinical diagnostics 2018-2023", "machine learning medical imaging", "deep learning pathology"
-- **Alternative Terms**: "artificial intelligence diagnostic tools", "ML healthcare diagnostics", "computer vision medical diagnosis"
-- **Sources/Tools**: PubMed, IEEE Xplore, Nature Medicine, healthcare industry reports
-- **Expected Results**: 8-10 authoritative sources
-- **Priority**: High
-- **Dependencies**: None (foundational research)
-- **Backup Strategy**: Expand to include global studies if U.S.-specific data is limited
-
-## Sub-query 2: Technical Challenges
-- **Primary Search Terms**: "AI diagnostic accuracy challenges", "machine learning healthcare integration", "clinical AI workflow problems"
-- **Alternative Terms**: "AI medical device validation", "healthcare ML interpretability", "diagnostic AI limitations"
-- **Sources/Tools**: Medical journals, IEEE, ACM Digital Library, FDA reports
-- **Expected Results**: 6-8 technical sources
-- **Priority**: High
-- **Dependencies**: Execute after Sub-query 1 for context
-- **Backup Strategy**: Focus on specific AI types (imaging, NLP) if general challenges are sparse
-
-## Sub-query 3: Ethical and Regulatory Issues
-- **Primary Search Terms**: "FDA AI medical device regulation", "healthcare AI ethics bias", "clinical AI privacy HIPAA"
-- **Alternative Terms**: "medical AI regulatory framework", "diagnostic AI ethical guidelines", "healthcare ML compliance"
-- **Sources/Tools**: FDA.gov, medical ethics journals, healthcare law publications, recent news
-- **Expected Results**: 5-7 regulatory and ethics sources
-- **Priority**: Medium
-- **Dependencies**: Can run parallel with Sub-query 2
-- **Backup Strategy**: Focus on FDA approvals and major ethical incidents if broad coverage is limited
-
-## Sub-query 4: Leading Companies and Institutions
-- **Primary Search Terms**: "AI diagnostic companies 2023", "clinical AI startups funding", "medical AI research institutions"
-- **Alternative Terms**: "healthcare AI market leaders", "diagnostic AI venture capital", "medical imaging AI companies"
-- **Sources/Tools**: Crunchbase, industry reports, medical technology news, academic institution websites
-- **Expected Results**: 6-8 market analysis sources
-- **Priority**: Medium
-- **Dependencies**: Execute after Sub-queries 1-2 for technical context
-- **Backup Strategy**: Focus on publicly traded companies and major academic centers if startup data is limited
-
-## Execution Order
-1. Sub-query 1 (foundational technology overview)
-2. Sub-query 2 (technical challenges) - parallel with Sub-query 3
-3. Sub-query 3 (regulatory/ethical) - parallel with Sub-query 2
-4. Sub-query 4 (market players) - after understanding technology landscape
-
-## Quality Criteria
-- Prioritize peer-reviewed publications and government reports
-- Use sources published 2018-2023 for currency
-- Ensure geographic focus on U.S. market where specified
-- Validate technical claims with multiple authoritative sources
+## Final Instructions
+For every research plan:
+1. Always read 'subqueries.json' using read_file
+2. Create a comprehensive search strategy for each subquery
+3. Structure the output as valid JSON with all required fields
+4. Save to 'research_plan.json' using write_file
+5. Ensure search terms are specific and actionable
+6. Include realistic expected results counts
+7. Set appropriate time ranges based on freshness requirements
 """

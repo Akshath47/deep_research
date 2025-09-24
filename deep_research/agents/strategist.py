@@ -19,8 +19,11 @@ def create_strategist_agent():
     
     The strategist agent:
     - Reads: subqueries.json
-    - Writes: research_plan.md → prioritized plan with search terms
+    - Writes: research_plan.json → structured JSON plan with search strategies
     - Flow: Sequential (third step)
+    
+    The agent now outputs structured JSON instead of markdown for easier parsing
+    by downstream components like the researcher agent.
     """
     
     # No additional tools needed beyond the built-in file system tools
