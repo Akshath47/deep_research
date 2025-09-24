@@ -1,14 +1,18 @@
 """
 Web search tools for the researcher agent.
-Uses Tavily MCP server with schema enforcement.
+Uses Tavily API with schema enforcement.
 """
 
-import sys, os, re, json
+import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from typing import List, Dict, Any, Optional, Literal, cast
+from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
+from tavily import TavilyClient
+
+# Initialize Tavily client once
+tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 # --- Schemas ---
 
@@ -38,51 +42,36 @@ class SearchResult(BaseModel):
 # --- Tools ---
 
 @tool
-def prepare_tavily_search_args(
+def tavily_search(
     query: str,
     max_results: int = 5,
     search_depth: Literal["basic", "advanced"] = "basic",
     include_raw_content: bool = True,
     include_domains: Optional[List[str]] = None,
     exclude_domains: Optional[List[str]] = None,
-    time_range: Optional[Literal["day", "week", "month", "year"]] = None
+    time_range: Optional[Literal["day", "week", "month", "year"]] = None,
 ) -> Dict[str, Any]:
-    """Validate and prepare search args."""
-    try:
-        args = SearchArgs(
-            query=query,
-            max_results=max_results,
-            search_depth=search_depth,
-            include_raw_content=include_raw_content,
-            include_domains=include_domains,
-            exclude_domains=exclude_domains,
-            time_range=time_range
-        )
-        return {k: v for k, v in args.model_dump().items() if v is not None}
-    except Exception as e:
-        print("SearchArgs validation failed:", e)
-        return {"query": query, "max_results": 5, "search_depth": "basic", "include_raw_content": True}
+    """Run a Tavily web search and return raw JSON results."""
+    args = SearchArgs(
+        query=query,
+        max_results=max_results,
+        search_depth=search_depth,
+        include_raw_content=include_raw_content,
+        include_domains=include_domains,
+        exclude_domains=exclude_domains,
+        time_range=time_range,
+    )
+    return tavily_client.search(**args.model_dump(exclude_none=True))
 
 @tool
-def prepare_tavily_extract_args(
+def tavily_extract(
     urls: List[str],
-    extract_depth: str = "basic",
-    format: str = "markdown"
+    extract_depth: Literal["basic", "advanced"] = "basic",
+    format: Literal["markdown", "text"] = "markdown",
 ) -> Dict[str, Any]:
-    """Validate and prepare extract args."""
-    try:
-        depth = cast(
-            Literal["basic", "advanced"],
-            extract_depth if extract_depth in ["basic", "advanced"] else "basic"
-        )
-        fmt = cast(
-            Literal["markdown", "text"],
-            format if format in ["markdown", "text"] else "markdown"
-        )
-        return ExtractArgs(urls=urls, extract_depth=depth, format=fmt).model_dump()
-    except Exception as e:
-        print("ExtractArgs validation failed:", e)
-        return {"urls": urls, "extract_depth": "basic", "format": "markdown"}
+    """Extract full content from given URLs using Tavily."""
+    args = ExtractArgs(urls=urls, extract_depth=extract_depth, format=format)
+    return tavily_client.extract(**args.model_dump())
 
 # --- Utils ---
 
@@ -154,60 +143,3 @@ def rerank_results_by_source_type(results: List[SearchResult], preferred: Option
         s = min(1.0, r.score * 1.2) if r.source_type in preferred else r.score
         boosted.append(r.copy(update={"score": s}))
     return sorted(boosted, key=lambda x: x.score, reverse=True)
-
-def create_search_strategy(plan: Dict[str, Any], subquery_info: Dict[str, Any]) -> Dict[str, Any]:
-    """Pick search strategy for a subquery from the research plan, or fallback."""
-    sid = subquery_info.get("id", 1)
-    sq = next((s for s in plan.get("subqueries", []) if s.get("id") == sid), None)
-    if not sq:
-        return _fallback_strategy(subquery_info)
-
-    strat = sq.get("search_strategy", {})
-    return {
-        "primary_terms": strat.get("primary_terms", [subquery_info.get("query", "")]),
-        "alternative_terms": strat.get("alternative_terms", []),
-        "max_results": strat.get("max_results", 5),
-        "search_depth": strat.get("search_depth", "basic"),
-        "include_raw_content": True,
-        "time_range": strat.get("time_range"),
-        "preferred_sources": strat.get("preferred_sources", ["web"]),
-        "include_domains": strat.get("include_domains", []),
-        "exclude_domains": strat.get("exclude_domains", []),
-        "backup_strategy": strat.get("backup_strategy", "Expand if limited"),
-        "expected_sources": sq.get("expected_results", 5),
-        "can_run_parallel": sq.get("can_run_parallel", True),
-        "dependencies": sq.get("dependencies", [])
-    }
-
-def _fallback_strategy(subquery_info: Dict[str, Any]) -> Dict[str, Any]:
-    """Fallback strategy if not found in plan."""
-    q = subquery_info.get("query", "")
-    pri = subquery_info.get("priority", "medium")
-    fresh = subquery_info.get("freshness", "any")
-    return {
-        "primary_terms": _generate_terms(q),
-        "alternative_terms": [],
-        "max_results": 8 if pri == "high" else 5,
-        "search_depth": "advanced" if pri == "high" else "basic",
-        "include_raw_content": True,
-        "time_range": "month" if fresh == "recent" else None,
-        "preferred_sources": ["web"],
-        "include_domains": [],
-        "exclude_domains": [],
-        "backup_strategy": "Expand if limited",
-        "expected_sources": 5,
-        "can_run_parallel": True,
-        "dependencies": []
-    }
-
-def _generate_terms(query: str) -> List[str]:
-    """Make simple variations of a query."""
-    q = query.lower()
-    terms = [query]
-    if q.startswith("what are") or q.startswith("what is"):
-        terms.append(re.sub(r'^what (are|is)\s+', '', q))
-    if q.startswith("how "):
-        terms.append(re.sub(r'^how\s+', '', q))
-    if len(query.split()) > 2:
-        terms.append(f'"{query}"')
-    return terms[:3]
