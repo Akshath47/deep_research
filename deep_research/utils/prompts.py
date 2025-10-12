@@ -952,26 +952,12 @@ Create `gap_list.json` with the following structure:
       "id": "gap_001",
       "category": "moderate|major",
       "priority": "high|medium|low",
-      "subquery_id": 1,
-      "subquery_text": "Original sub-query text",
       "gap_description": "Specific description of what is missing or incomplete",
       "current_coverage": "Brief summary of what the report currently says",
       "needed_research": "Specific research tasks or questions to address this gap",
       "suggested_sources": ["Type of sources that would help", "Specific domains or databases"],
       "impact": "How this gap affects the overall research quality"
     }
-  ],
-  "clarity_improvements_needed": [
-    {
-      "section": "Section name or topic",
-      "issue": "Description of clarity issue",
-      "suggestion": "How to improve clarity"
-    }
-  ],
-  "recommendations": [
-    "High-level recommendation for future research iterations",
-    "Suggested improvements to research methodology",
-    "Areas requiring expert consultation"
   ]
 }
 ```
@@ -985,7 +971,6 @@ Create `gap_list.json` with the following structure:
   - "high": Critical to answering the main research question
   - "medium": Important but not essential
   - "low": Nice-to-have additional context
-- **subquery_id**: Link to the original sub-query (if applicable)
 - **gap_description**: Specific, actionable description of what's missing
 - **current_coverage**: What the report currently says (if anything)
 - **needed_research**: Concrete research tasks to fill this gap
@@ -1001,7 +986,6 @@ Create `gap_list.json` with the following structure:
 - Be specific and actionable in gap descriptions
 - Prioritize gaps that affect core research questions
 - Provide concrete suggestions for addressing each gap
-- Link gaps to specific sub-queries when possible
 - Distinguish between missing information and unclear presentation
 
 # Conservative Filling Principles
@@ -1023,18 +1007,17 @@ Create `gap_list.json` with the following structure:
 # Output Format
 
 ## final_paper.md
-- Maintain the same structure as draft_report.md
-- Include all sections: Executive Summary, Introduction, Main Sections, Conclusions, Limitations, References
-- Preserve all original citations and add new ones for filled content
-- Use consistent academic tone and formatting
-- Ensure smooth transitions and logical flow
+- Maintain the same section structure as `draft_report.md` (Executive Summary, Introduction, Main Sections, Conclusions, Limitations, References)
+- If `<!-- REPORT_START -->` and `<!-- REPORT_END -->` tags are present in the draft, preserve them.
+- If they are missing, wrap the full final report between those tags.
+- Preserve all original citations and add new ones for filled content.
+- Use consistent academic tone and formatting.
+- Ensure smooth transitions and logical flow.
 
 ## gap_list.json
 - Valid JSON format
 - Complete summary statistics
 - Detailed gap entries with all required fields
-- Actionable clarity improvement suggestions
-- High-level recommendations for future iterations
 
 # Error Handling
 - If `draft_report.md` is missing or corrupted:
@@ -1088,9 +1071,7 @@ Missing specific examples that are available in summaries.
   "id": "gap_001",
   "category": "moderate",
   "priority": "high",
-  "subquery_id": 2,
-  "subquery_text": "What are the main technical challenges of applying AI in clinical diagnostics?",
-  "gap_description": "Report identifies challenges at high level but lacks specific examples, quantitative data on failure rates, or detailed analysis of integration barriers",
+  "gap_description": "Report identifies challenges at high level but lacks specific examples, quantitative data on failure rates, or detailed analysis of integration barriers for the sub-query 'What are the main technical challenges of applying AI in clinical diagnostics?'",
   "current_coverage": "Mentions accuracy concerns and integration difficulties in one paragraph without supporting evidence",
   "needed_research": "Search for case studies of AI diagnostic failures, quantitative data on accuracy limitations, specific examples of integration challenges in hospital workflows",
   "suggested_sources": ["IEEE medical imaging journals", "Healthcare IT implementation studies", "FDA adverse event reports for AI medical devices"],
@@ -1112,15 +1093,20 @@ Missing specific examples that are available in summaries.
   "id": "gap_002",
   "category": "major",
   "priority": "high",
-  "subquery_id": 4,
-  "subquery_text": "Which companies, startups, or research institutions are leading in AI for clinical diagnostics?",
-  "gap_description": "This sub-query is completely unaddressed in the current report. No companies, startups, or institutions are mentioned.",
+  "gap_description": "The sub-query 'Which companies, startups, or research institutions are leading in AI for clinical diagnostics?' is completely unaddressed in the current report. No companies, startups, or institutions are mentioned.",
   "current_coverage": "None - this topic is not covered",
   "needed_research": "Comprehensive market research on AI diagnostic companies, startup funding analysis, academic institution rankings, patent analysis, FDA approval tracking",
   "suggested_sources": ["Crunchbase for startup data", "PubMed for academic institution publications", "FDA database for approved AI medical devices", "CB Insights for market analysis"],
   "impact": "Critical gap - this was a core sub-query and its absence significantly reduces the report's practical value for understanding the competitive landscape"
 }
 ```
+
+# Quality Standards
+- Completeness: every sub-query addressed or listed in gap_list.json  
+- Clarity: all sections coherent, transitions smooth  
+- Accuracy: no speculative or fabricated info  
+- Format: valid Markdown and JSON outputs only  
+- Deliverables: exactly two files — `final_paper.md`, `gap_list.json`
 
 # Final Instructions
 1. Always read both `draft_report.md` and `subqueries.json` first
