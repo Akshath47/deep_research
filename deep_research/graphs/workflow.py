@@ -104,8 +104,7 @@ def run_researcher(state: ResearchFlowState):
     
     return {"files": result.get("files", {})}
 
-
-def run_researcher_merge(state: ResearchFlowState, inputs: list[dict]):
+def run_researcher_merge(state: ResearchFlowState):
     """
     Merges all researcher outputs back into the main state.
     Uses DeepAgents' built-in file_reducer for consistency.
@@ -117,8 +116,42 @@ def run_researcher_merge(state: ResearchFlowState, inputs: list[dict]):
     Returns:
         dict: Updated state with all merged files
     """
-    merged_files = dict(state.get("files", {}))
-    for inp in inputs:
-        merged_files = file_reducer(merged_files, inp.get("files"))
     
-    return {"files": merged_files}
+    return {"files": state.get("files", {})}
+
+
+# --- Build the Graph Workflow ---
+
+graph = StateGraph(ResearchFlowState)
+
+graph.add_node("clarifier", run_clarifier)
+graph.add_node("decomposer", run_decomposer)
+graph.add_node("strategist", run_strategist)
+
+# Build the researcher hub subgraph
+researcher_hub = StateGraph(ResearchFlowState)
+researcher_hub.add_node("map_researcher", run_researcher)
+researcher_hub.add_node("reduce_researcher", run_researcher_merge)
+researcher_hub.add_conditional_edges("map_researcher", map_each_subquery)
+researcher_hub.add_edge("map_researcher", "reduce_researcher")
+
+# Compile the subgraph and add it to the main graph
+researcher_hub = researcher_hub.compile()
+graph.add_node("researcher_hub", researcher_hub)
+
+graph.add_node("fact_checker", run_fact_checker)
+graph.add_node("synthesizer", run_synthesizer)
+graph.add_node("reviewer", run_reviewer)
+
+# Define the flow
+graph.set_entry_point("clarifier")
+graph.add_edge("clarifier", "decomposer")
+graph.add_edge("decomposer", "strategist")
+graph.add_edge("strategist", "researcher_hub")
+graph.add_edge("researcher_hub", "fact_checker")
+graph.add_edge("fact_checker", "synthesizer")
+graph.add_edge("synthesizer", "reviewer")
+graph.add_edge("reviewer", END)
+
+# Compile main graph
+app = graph.compile()
