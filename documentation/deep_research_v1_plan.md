@@ -130,56 +130,87 @@ class ResearchFlowState(DeepAgentState):
 
 
 # --- 3. Node Runners ---
+
+def run_agent(agent, state: ResearchFlowState):
+    """
+    Generic runner for any DeepAgent-based node.
+    Invokes the agent, merges returned files with the existing state,
+    and returns the updated state in LangGraph-compatible format.
+    """
+    result = agent.invoke(state)
+    merged_files = {**state.files, **result.get("files", {})}
+    return {"files": merged_files}
+
+
 def run_clarifier(state: ResearchFlowState):
-    return {"files": clarifier_agent.invoke(state)["files"]}
+    return run_agent(clarifier_agent, state)
+
 
 def run_decomposer(state: ResearchFlowState):
-    return {"files": decomposer_agent.invoke(state)["files"]}
+    return run_agent(decomposer_agent, state)
+
 
 def run_strategist(state: ResearchFlowState):
-    return {"files": strategist_agent.invoke(state)["files"]}
+    return run_agent(strategist_agent, state)
+
 
 def run_fact_checker(state: ResearchFlowState):
-    return {"files": factchecker_agent.invoke(state)["files"]}
+    return run_agent(factchecker_agent, state)
+
 
 def run_synthesizer(state: ResearchFlowState):
-    return {"files": synthesizer_agent.invoke(state)["files"]}
+    return run_agent(synthesizer_agent, state)
+
 
 def run_reviewer(state: ResearchFlowState):
-    return {"files": reviewer_agent.invoke(state)["files"]}
+    return run_agent(reviewer_agent, state)
 
 
 # --- 4. Map–Reduce for ResearcherHub ---
+from copy import deepcopy
+from langgraph.graph import Send
+
+
 def map_each_subquery(state: ResearchFlowState):
-    subqueries = state.read_json("subqueries.json")
+    """
+    Splits the clarified query into multiple subqueries for parallel research.
+    Each subquery will spawn a new Researcher agent instance.
+    """
+    subqueries = state.read_json("subqueries.json") or []
     for idx, subq in enumerate(subqueries):
         yield Send("map_researcher", {"subquery": subq, "index": idx})
+
 
 def run_researcher(state: ResearchFlowState, subquery: dict, index: int):
     """
     Each researcher_agent handles one subquery.
-    It should fetch multiple results → name files consistently:
-    - /raw_data/subquery{index}_result{k}.txt
-    - /summaries/subquery{index}_result{k}.md
+    It should fetch multiple results and name files consistently:
+      /raw_data/subquery{index}_result{k}.txt
+      /summaries/subquery{index}_result{k}.md
     """
+    # Use deepcopy so parallel agents don’t mutate shared state
     result = researcher_agent.invoke({
-        "files": state.files,
+        "files": deepcopy(state.files),
         "subquery": subquery,
         "index": index,
     })
 
-    # Suppose researcher_agent internally writes N results
-    # with the naming convention:
-    #   /raw_data/subquery{index}_result{n}.txt
-    #   /summaries/subquery{index}_result{n}.md
+    return {"files": result.get("files", {})}
 
-    return {"files": result["files"]}
+from deepagents.state import file_reducer
 
 def run_researcher_merge(state: ResearchFlowState, inputs: list[dict]):
+    """
+    Merges all researcher outputs back into the main state.
+    Uses DeepAgents' built-in file_reducer for consistency.
+    (This applies a last-write-wins merge for duplicate file paths.)
+    """
     merged_files = dict(state.files)
     for inp in inputs:
-        merged_files.update(inp["files"])
+        merged_files = file_reducer(merged_files, inp.get("files"))
+
     return {"files": merged_files}
+
 
 
 # --- 5. Build Graph ---
