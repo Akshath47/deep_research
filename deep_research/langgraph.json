@@ -1,7 +1,15 @@
 {
-  "dependencies": [".."],
+  "dependencies": [
+    ".",
+    "langgraph",
+    "langchain-anthropic",
+    "langchain",
+    "langchain-openai",
+    "tavily-python",
+    "python-dotenv"
+  ],
   "graphs": {
-    "research": "./research_agent.py:agent"
+    "research_workflow": "./graphs/workflow.py:app"
   },
   "env": ".env"
 }

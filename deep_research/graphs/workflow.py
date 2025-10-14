@@ -130,6 +130,7 @@ graph.add_node("strategist", run_strategist)
 
 # Build the researcher hub subgraph
 researcher_hub = StateGraph(ResearchFlowState)
+researcher_hub.set_entry_point("map_researcher")
 researcher_hub.add_node("map_researcher", run_researcher)
 researcher_hub.add_node("reduce_researcher", run_researcher_merge)
 researcher_hub.add_conditional_edges("map_researcher", map_each_subquery)
