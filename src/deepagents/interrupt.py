@@ -88,8 +88,16 @@ def create_interrupt_hook(
             "description": description,
         }
 
-        responses: List[HumanResponse] = interrupt([request])
+        raw_responses = interrupt([request])
 
+        # Handle both list and single dict responses from LangGraph
+        if isinstance(raw_responses, dict):
+            responses: List[HumanResponse] = [raw_responses]
+        elif isinstance(raw_responses, list):
+            responses: List[HumanResponse] = raw_responses
+        else:
+            raise ValueError(f"Unexpected response type from interrupt: {type(raw_responses)}")
+        
         if len(responses) != 1:
             raise ValueError(f"Expected a list of one response, got {responses}")
         response = responses[0]
