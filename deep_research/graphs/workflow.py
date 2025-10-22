@@ -17,6 +17,7 @@ from agents.researcher import researcher_agent
 from agents.factchecker import factchecker_agent
 from agents.synthesizer import synthesizer_agent
 from agents.reviewer import reviewer_agent
+from graphs.researcher_hub import researcher_hub_graph
 
 
 # --- Generic Agent Runner ---
@@ -56,69 +57,6 @@ def run_reviewer(state: ResearchFlowState):
     return run_agent(reviewer_agent, state)
 
 
-# --- Map-Reduce for Researcher Hub ---
-
-def map_each_subquery(state: ResearchFlowState):
-    """
-    Splits the clarified query into multiple subqueries for parallel research.
-    Each subquery will spawn a new Researcher agent instance.
-    
-    Yields:
-        Send: LangGraph Send objects for parallel execution
-    """
-    # Read subqueries from the virtual filesystem
-    subqueries_content = state.get("files", {}).get("subqueries.json", "[]")
-    try:
-        subqueries = json.loads(subqueries_content)
-    except json.JSONDecodeError:
-        subqueries = []
-    
-    # Spawn a researcher for each subquery
-    for idx, subq in enumerate(subqueries):
-        yield Send("map_researcher", {"subquery": subq, "index": idx})
-
-
-def run_researcher(state: ResearchFlowState):
-    """
-    Each researcher_agent handles one subquery.
-    
-    Args:
-        state: ResearchFlowState containing subquery and index
-        
-    Returns:
-        dict: Updated state with new files from this researcher
-    """
-    # Extract subquery and index from state
-    subquery = state.get("subquery")
-    index = state.get("index", 0)
-    
-    # Use deepcopy so parallel agents don't mutate shared state
-    researcher_state = {
-        "files": deepcopy(state.get("files", {})),
-        "subquery": subquery,
-        "index": index,
-    }
-    
-    # Invoke the researcher agent (which is a CustomSubAgent with a subgraph)
-    result = researcher_agent["graph"].invoke(researcher_state)
-    
-    return {"files": result.get("files", {})}
-
-def run_researcher_merge(state: ResearchFlowState):
-    """
-    Merges all researcher outputs back into the main state.
-    Uses DeepAgents' built-in file_reducer for consistency.
-    
-    Args:
-        state: Current ResearchFlowState
-        inputs: List of dicts from parallel researcher executions
-        
-    Returns:
-        dict: Updated state with all merged files
-    """
-    
-    return {"files": state.get("files", {})}
-
 
 # --- Build the Graph Workflow ---
 
@@ -128,17 +66,8 @@ graph.add_node("clarifier", run_clarifier)
 graph.add_node("decomposer", run_decomposer)
 graph.add_node("strategist", run_strategist)
 
-# Build the researcher hub subgraph
-researcher_hub = StateGraph(ResearchFlowState)
-researcher_hub.set_entry_point("map_researcher")
-researcher_hub.add_node("map_researcher", run_researcher)
-researcher_hub.add_node("reduce_researcher", run_researcher_merge)
-researcher_hub.add_conditional_edges("map_researcher", map_each_subquery)
-researcher_hub.add_edge("map_researcher", "reduce_researcher")
-
-# Compile the subgraph and add it to the main graph
-researcher_hub = researcher_hub.compile()
-graph.add_node("researcher_hub", researcher_hub)
+# Use the researcher hub subgraph from researcher_hub.py
+graph.add_node("researcher_hub", researcher_hub_graph)
 
 graph.add_node("fact_checker", run_fact_checker)
 graph.add_node("synthesizer", run_synthesizer)
