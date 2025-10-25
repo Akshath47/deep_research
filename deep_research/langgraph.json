@@ -9,7 +9,8 @@
     "python-dotenv"
   ],
   "graphs": {
-    "research_workflow": "./graphs/workflow.py:app"
+    "research_workflow": "./graphs/workflow.py:app",
+    "test_researcher_hub": "./graphs/test_researcher_hub.py:app"
   },
   "env": ".env"
 }
