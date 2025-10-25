@@ -7,7 +7,7 @@ import sys, os, json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Dict, Any, List
-from state import ResearchFlowState, read_text, read_json
+from state import ResearcherState, read_text, read_json
 from deepagents.model import get_default_model
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
@@ -27,7 +27,7 @@ class SummaryAnalysis(BaseModel):
     extracted_title: str
 
 
-def summarizer_node(state: ResearchFlowState) -> Dict[str, Any]:
+def summarizer_node(state: ResearcherState) -> Dict[str, Any]:
     """Summarize raw data files into structured JSON summaries."""
     meta = state.get("search_metadata", {})
     idx = meta.get("subquery_index", 0)

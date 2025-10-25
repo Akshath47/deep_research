@@ -7,7 +7,7 @@ import sys, os, json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Dict, Any, List, Optional
-from state import ResearchFlowState
+from state import ResearcherState
 from tools.web_search import (
     tavily_search,
     tavily_extract,
@@ -44,8 +44,8 @@ _scraper_node_agent = create_react_agent(
     tools=[tavily_search, tavily_extract],
 )
 
-def scraper_node(state: ResearchFlowState) -> Dict[str, Any]:
-    """Scraper node: run Tavily via LLM, process results, and save to files."""
+def scraper_node(state: ResearcherState) -> Dict[str, Any]:
+    """Scraper node: run Tavily via LLM, process results, and save to files."""    
     subquery = state.get("current_subquery", {})
     idx = state.get("current_subquery_index", 0)
     if not subquery:
@@ -53,7 +53,8 @@ def scraper_node(state: ResearchFlowState) -> Dict[str, Any]:
 
     # Ask LLM (via ReAct) to search/extract until it has good results; return ScraperOutput
     prompt = f"{SCRAPER_PROMPT}\n\nSubquery: {subquery.get('query', '')}"
-    llm_res = _scraper_node_agent.invoke([HumanMessage(content=prompt)])
+    # ReAct agent expects a state dict with messages, not a list
+    llm_res = _scraper_node_agent.invoke({"messages": [HumanMessage(content=prompt)]})
 
     # ReAct agent returns a dict. Its "output" should be ScraperOutput (pydantic) or a dict matching it.
     raw_out = llm_res.get("output", {})
