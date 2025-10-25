@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Dict, Any, List
 from state import ResearcherState, read_text, read_json
-from deepagents.model import get_default_model
+from deep_research.config.models import get_model
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -37,7 +37,7 @@ def summarizer_node(state: ResearcherState) -> Dict[str, Any]:
         return {"files": state.get("files", {})}
 
     files = dict(state.get("files", {}))
-    llm = get_default_model()
+    llm = get_model("summarizer_node")
     summaries = []
 
     for i, raw_path in enumerate(meta["raw_data_files"]):

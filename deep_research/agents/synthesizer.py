@@ -13,6 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 from deepagents import create_deep_agent
 from state import ResearchFlowState
 from utils.prompts import SYNTHESIZER_AGENT_PROMPT
+from deep_research.config.models import get_model
 
 
 def create_synthesizer_agent():
@@ -33,7 +34,8 @@ def create_synthesizer_agent():
         instructions=SYNTHESIZER_AGENT_PROMPT,
         state_schema=ResearchFlowState,
         # Include built-in file tools for reading inputs and writing report
-        builtin_tools=["write_file", "read_file", "ls", "edit_file"]
+        builtin_tools=["write_file", "read_file", "ls", "edit_file"],
+        model=get_model("synthesizer")
     )
     
     return agent

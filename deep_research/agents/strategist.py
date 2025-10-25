@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from deepagents import create_deep_agent
 from state import ResearchFlowState
 from utils.prompts import STRATEGIST_AGENT_PROMPT
+from deep_research.config.models import get_model
 
 
 def create_strategist_agent():
@@ -35,7 +36,8 @@ def create_strategist_agent():
         instructions=STRATEGIST_AGENT_PROMPT,
         state_schema=ResearchFlowState,
         # Only need the built-in file tools: write_file, read_file, ls, edit_file
-        builtin_tools=["write_file", "read_file", "ls", "edit_file"]
+        builtin_tools=["write_file", "read_file", "ls", "edit_file"],
+        model=get_model("strategist")
     )
     
     return agent

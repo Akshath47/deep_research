@@ -17,7 +17,7 @@ from tools.web_search import (
     rerank_results_by_source_type,
     SearchResult,
 )
-from deepagents.model import get_default_model
+from deep_research.config.models import get_model
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError
@@ -38,7 +38,7 @@ class ScraperOutput(BaseModel):
     terms_used: List[str]
 
 # Use ReAct agent pattern to allow the LLM to decide when to use which tool and validate outputs and reiterate if needed
-llm = get_default_model()
+llm = get_model("scraper_node")
 _scraper_node_agent = create_react_agent(
     llm,
     tools=[tavily_search, tavily_extract],
