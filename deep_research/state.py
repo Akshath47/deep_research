@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, NotRequired
 from deepagents.state import DeepAgentState
 
 # Virtual filesystem helpers
@@ -19,7 +19,20 @@ class ResearchFlowState(DeepAgentState):
     """
     pass  # files field is already defined in DeepAgentState
 
-    pass  # All methods will be utility functions since TypedDict doesn't support methods
+
+class ResearcherState(ResearchFlowState):
+    """
+    State container for the researcher subgraph - extends ResearchFlowState with
+    additional fields needed for parallel researcher execution.
+    
+    These fields are only used within the researcher hub and its subgraphs,
+    keeping the main ResearchFlowState clean.
+    
+    - current_subquery: The subquery object being processed by this researcher instance
+    - current_subquery_index: The index of the current subquery in the subqueries list
+    """
+    current_subquery: NotRequired[Dict[str, Any]]
+    current_subquery_index: NotRequired[int]
 
 
 # ---- Utility functions for ResearchFlowState ----
