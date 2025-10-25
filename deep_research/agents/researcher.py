@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from langgraph.graph import StateGraph, END
-from state import ResearchFlowState
+from state import ResearcherState
 from nodes.scraper_node import scraper_node
 from nodes.summarizer_node import summarizer_node
 from deepagents.sub_agent import CustomSubAgent
@@ -19,9 +19,12 @@ def create_researcher_subgraph():
     """
     Create the researcher subgraph with two sequential nodes.
     This provides guaranteed sequential execution: scraper → summarizer
+    
+    Uses ResearcherState which includes current_subquery and current_subquery_index
+    fields needed for parallel execution.
     """
-    # Create the subgraph
-    researcher_graph = StateGraph(ResearchFlowState)
+    # Create the subgraph using ResearcherState
+    researcher_graph = StateGraph(ResearcherState)
     
     # Add the two sequential nodes
     researcher_graph.add_node("scraper", scraper_node)
