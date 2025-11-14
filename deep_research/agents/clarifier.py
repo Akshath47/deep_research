@@ -12,7 +12,7 @@ from deepagents import create_deep_agent, ToolInterruptConfig
 from state import ResearchFlowState
 from utils.prompts import CLARIFIER_AGENT_PROMPT
 from tools.clarification import ask_clarifying_question, finalize_clarified_query
-from deep_research.config.models import get_model
+from config.models import get_model
 
 
 def create_clarifier_agent():

@@ -17,7 +17,7 @@ from tools.web_search import (
     rerank_results_by_source_type,
     SearchResult,
 )
-from deep_research.config.models import get_model
+from config.models import get_model
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field, ValidationError

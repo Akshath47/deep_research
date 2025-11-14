@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 from deepagents import create_deep_agent
 from state import ResearchFlowState
 from utils.prompts import FACTCHECKER_AGENT_PROMPT
-from deep_research.config.models import get_model
+from config.models import get_model
 
 
 def create_factchecker_agent():
