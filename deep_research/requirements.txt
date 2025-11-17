@@ -1,5 +1,14 @@
+# LangChain/LangGraph v1.0 packages
+langgraph>=1.0.0
+langchain>=1.0.0
+langchain-core>=1.0.0
+langchain-openai>=1.0.0
+langchain-anthropic>=1.0.0
+
+# Prebuilt agents (contains deprecated create_react_agent for deepagents framework)
+langgraph-prebuilt>=1.0.0
+
+# Tools and utilities
 langgraph-cli[inmem]
 tavily-python
-langchain-openai
-langchain
 python-dotenv

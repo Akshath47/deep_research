@@ -202,26 +202,3 @@ If you encounter missing dependencies, reinstall requirements:
 ```bash
 pip install --upgrade -r requirements.txt
 ```
-
-## Development
-
-To run tests:
-
-```bash
-python -m pytest
-```
-
-For development with hot-reloading:
-
-```bash
-langgraph dev --watch
-```
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Contributing
-
-Contributions are welcome! Please ensure all files under `src/` remain untouched as they contain core library code.
-
