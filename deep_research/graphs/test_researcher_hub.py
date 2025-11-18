@@ -59,7 +59,7 @@ The final deliverable will be: comprehensive research report
     
     # Template 2: research_plan.json
     files["research_plan.json"] = json.dumps({
-        "executive_summary": "This research plan explores the recent developments and applications of agentic AI in the global finance sector, focusing on investment, trading, and banking. It also examines the benefits, challenges, and key players in the field. The plan prioritizes recent advancements and applications, followed by an analysis of benefits and challenges, and concludes with identifying leading companies and institutions.",
+        "executive_summary": "This research plan explores the recent developments and applications of agentic AI in the global finance sector, focusing on investment and trading. The plan prioritizes recent advancements and their applications in these key areas.",
         "subqueries": [
             {
                 "id": 1,
@@ -101,88 +101,8 @@ The final deliverable will be: comprehensive research report
                 "dependencies": [],
                 "can_run_parallel": True
             },
-            {
-                "id": 3,
-                "query": "How is agentic AI being applied in the trading sector globally?",
-                "priority": "high",
-                "freshness": "recent",
-                "search_strategy": {
-                "primary_terms": ["agentic AI trading sector", "AI algorithmic trading", "AI market analysis trading"],
-                "alternative_terms": ["AI trade execution", "AI trading strategies", "AI financial markets"],
-                "max_results": 8,
-                "search_depth": "advanced",
-                "time_range": "year",
-                "preferred_sources": ["academic", "web"],
-                "include_domains": ["bloomberg.com", "reuters.com", "wsj.com"],
-                "exclude_domains": [],
-                "backup_strategy": "Focus on algorithmic trading if broader applications are limited"
-                },
-                "expected_results": 8,
-                "dependencies": [],
-                "can_run_parallel": True
-            },
-            {
-                "id": 4,
-                "query": "How is agentic AI being applied in the banking sector globally?",
-                "priority": "high",
-                "freshness": "recent",
-                "search_strategy": {
-                "primary_terms": ["agentic AI banking sector", "AI customer service banking", "AI fraud detection banking"],
-                "alternative_terms": ["AI credit scoring banking", "AI banking operations", "AI financial services"],
-                "max_results": 8,
-                "search_depth": "advanced",
-                "time_range": "year",
-                "preferred_sources": ["academic", "web"],
-                "include_domains": ["bankingtech.com", "forbes.com", "bloomberg.com"],
-                "exclude_domains": [],
-                "backup_strategy": "Focus on customer service applications if broader data is limited"
-                },
-                "expected_results": 8,
-                "dependencies": [],
-                "can_run_parallel": True
-            },
-            {
-                "id": 5,
-                "query": "What are the potential benefits and challenges of agentic AI applications in the finance sector?",
-                "priority": "medium",
-                "freshness": "recent",
-                "search_strategy": {
-                "primary_terms": ["agentic AI benefits finance", "AI challenges finance sector", "AI efficiency gains finance"],
-                "alternative_terms": ["AI ethical concerns finance", "AI regulatory issues finance", "AI adoption finance"],
-                "max_results": 6,
-                "search_depth": "basic",
-                "time_range": "year",
-                "preferred_sources": ["news", "web"],
-                "include_domains": ["forbes.com", "reuters.com", "financialtimes.com"],
-                "exclude_domains": [],
-                "backup_strategy": "Focus on specific challenges like ethical concerns if general data is sparse"
-                },
-                "expected_results": 6,
-                "dependencies": [],
-                "can_run_parallel": True
-            },
-            {
-                "id": 6,
-                "query": "Which companies or institutions are leading in agentic AI developments in the finance sector?",
-                "priority": "medium",
-                "freshness": "recent",
-                "search_strategy": {
-                "primary_terms": ["leading AI companies finance", "AI innovators finance sector", "AI leaders financial industry"],
-                "alternative_terms": ["AI development finance companies", "AI pioneers finance", "AI institutions finance"],
-                "max_results": 6,
-                "search_depth": "basic",
-                "time_range": "year",
-                "preferred_sources": ["news", "web"],
-                "include_domains": ["crunchbase.com", "forbes.com", "bloomberg.com"],
-                "exclude_domains": [],
-                "backup_strategy": "Focus on major tech companies if specific finance sector leaders are limited"
-                },
-                "expected_results": 6,
-                "dependencies": [],
-                "can_run_parallel": True
-            }
             ],
-            "execution_order": [1, 2, 3, 4, 5, 6],
+            "execution_order": [1, 2],
             "quality_criteria": [
             "Prioritize peer-reviewed publications and reputable news sources",
             "Use sources published within the last year for currency",
@@ -207,34 +127,6 @@ The final deliverable will be: comprehensive research report
             "freshness": "recent",
             "description": "This sub-query explores the specific applications and use cases of agentic AI in the investment sector, including portfolio management, risk assessment, and decision-making processes."
         },
-        {
-            "id": 3,
-            "query": "How is agentic AI being applied in the trading sector globally?",
-            "priority": "high",
-            "freshness": "recent",
-            "description": "This sub-query investigates the role of agentic AI in trading activities, such as algorithmic trading, market analysis, and trade execution."
-        },
-        {
-            "id": 4,
-            "query": "How is agentic AI being applied in the banking sector globally?",
-            "priority": "high",
-            "freshness": "recent",
-            "description": "This sub-query examines the integration and impact of agentic AI in banking operations, including customer service, fraud detection, and credit scoring."
-        },
-        {
-            "id": 5,
-            "query": "What are the potential benefits and challenges of agentic AI applications in the finance sector?",
-            "priority": "medium",
-            "freshness": "recent",
-            "description": "This sub-query analyzes the advantages and potential obstacles associated with the adoption of agentic AI in finance, such as efficiency gains, ethical concerns, and regulatory issues."
-        },
-        {
-            "id": 6,
-            "query": "Which companies or institutions are leading in agentic AI developments in the finance sector?",
-            "priority": "medium",
-            "freshness": "recent",
-            "description": "This sub-query identifies key players and innovators in the field of agentic AI within the finance sector, highlighting their contributions and influence."
-        }
     ], indent=2)
     
     return {"files": files}
