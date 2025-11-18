@@ -51,19 +51,41 @@ def scraper_node(state: ResearcherState) -> Dict[str, Any]:
     if not subquery:
         return {"files": state.get("files", {})}
 
-    # Ask LLM (via ReAct) to search/extract until it has good results; return ScraperOutput
+    # Step 1: Use ReAct agent to call Tavily tools and gather information
     prompt = f"{SCRAPER_PROMPT}\n\nSubquery: {subquery.get('query', '')}"
-    # ReAct agent expects a state dict with messages, not a list
+    print(f"\n🔍 Step 1: Running ReAct agent for subquery {idx}")
+    
     llm_res = _scraper_node_agent.invoke({"messages": [HumanMessage(content=prompt)]})
+    messages = llm_res.get("messages", [])
+    
+    print(f"✅ ReAct agent completed with {len(messages)} messages")
 
-    # ReAct agent returns a dict. Its "output" should be ScraperOutput (pydantic) or a dict matching it.
-    raw_out = llm_res.get("output", {})
+    # Step 2: Extract tool results from messages and structure them with a second LLM call
+    print(f"🔍 Step 2: Structuring results with LLM")
+    
+    # Build a summary of what the ReAct agent found
+    extraction_prompt = f"""Based on the search results in this conversation, extract and structure the information.
 
-    # Validate output schema to ensure it matches ScraperOutput and can be used by tavily parsers
+Original subquery: {subquery.get('query', '')}
+
+Review all tool call results in the conversation history and create a structured output with:
+- A list of the best search results found (URL, title, snippet, content, published date if available, and relevance score)
+- The search terms that were actually used
+
+Return exactly 5-8 of the most relevant, high-quality results."""
+
+    # Use structured output to get ScraperOutput
+    structured_llm = llm.with_structured_output(ScraperOutput)
+    
     try:
-        out = ScraperOutput.model_validate(raw_out).model_dump()
+        scraper_output = structured_llm.invoke(messages + [HumanMessage(content=extraction_prompt)])
+        out = scraper_output.model_dump()
+        print(f"✅ Successfully structured {len(out.get('results', []))} results")
     except ValidationError as e:
-        print("Schema validation failed:", e)
+        print(f"❌ Schema validation failed: {e}")
+        out = {"results": [], "terms_used": [subquery.get("query", "")]}
+    except Exception as e:
+        print(f"❌ Unexpected error during structuring: {e}")
         out = {"results": [], "terms_used": [subquery.get("query", "")]}
 
     # Normalize into SearchResult objects

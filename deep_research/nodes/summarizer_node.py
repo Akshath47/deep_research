@@ -29,11 +29,21 @@ class SummaryAnalysis(BaseModel):
 
 def summarizer_node(state: ResearcherState) -> Dict[str, Any]:
     """Summarize raw data files into structured JSON summaries."""
-    meta = state.get("search_metadata", {})
-    idx = meta.get("subquery_index", 0)
-    subquery = meta.get("subquery_info", {})
+    # Get index from state (set by researcher hub)
+    idx = state.get("current_subquery_index", 0)
+    subquery = state.get("current_subquery", {})
+    
+    # Read metadata from file instead of state
+    metadata_file = f"raw_data/subquery{idx}_metadata.json"
+    meta = read_json(state, metadata_file, default={})
+    
+    print(f"\n🔍 DEBUG: Summarizer processing subquery {idx}")
+    print(f"🔍 DEBUG: Metadata file: {metadata_file}")
+    print(f"🔍 DEBUG: Metadata content: {meta}")
+    print(f"🔍 DEBUG: Raw data files: {meta.get('raw_data_files', [])}")
 
     if not meta or not meta.get("raw_data_files"):
+        print(f"⚠️ WARNING: No metadata file or raw_data_files found. Skipping summarization.")
         return {"files": state.get("files", {})}
 
     files = dict(state.get("files", {}))
