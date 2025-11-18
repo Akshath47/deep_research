@@ -53,15 +53,11 @@ def scraper_node(state: ResearcherState) -> Dict[str, Any]:
 
     # Step 1: Use ReAct agent to call Tavily tools and gather information
     prompt = f"{SCRAPER_PROMPT}\n\nSubquery: {subquery.get('query', '')}"
-    print(f"\n🔍 Step 1: Running ReAct agent for subquery {idx}")
     
     llm_res = _scraper_node_agent.invoke({"messages": [HumanMessage(content=prompt)]})
     messages = llm_res.get("messages", [])
-    
-    print(f"✅ ReAct agent completed with {len(messages)} messages")
 
     # Step 2: Extract tool results from messages and structure them with a second LLM call
-    print(f"🔍 Step 2: Structuring results with LLM")
     
     # Build a summary of what the ReAct agent found
     extraction_prompt = f"""Based on the search results in this conversation, extract and structure the information.
@@ -80,12 +76,8 @@ Return exactly 5-8 of the most relevant, high-quality results."""
     try:
         scraper_output = structured_llm.invoke(messages + [HumanMessage(content=extraction_prompt)])
         out = scraper_output.model_dump()
-        print(f"✅ Successfully structured {len(out.get('results', []))} results")
-    except ValidationError as e:
-        print(f"❌ Schema validation failed: {e}")
-        out = {"results": [], "terms_used": [subquery.get("query", "")]}
-    except Exception as e:
-        print(f"❌ Unexpected error during structuring: {e}")
+    except (ValidationError, Exception) as e:
+        print(f"Warning: Failed to structure scraper output: {e}")
         out = {"results": [], "terms_used": [subquery.get("query", "")]}
 
     # Normalize into SearchResult objects
