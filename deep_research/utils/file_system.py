@@ -18,7 +18,27 @@ def read_json(files: Dict[str, str], path: str, default=None) -> Any:
     raw = files.get(path)
     if raw is None:
         return default if default is not None else []
-    return json.loads(raw)
+    
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        # Provide detailed error message with context
+        lines = raw.split('\n')
+        error_line = lines[e.lineno - 1] if e.lineno <= len(lines) else "N/A"
+        
+        # Show surrounding context (3 lines before/after)
+        start = max(0, e.lineno - 4)
+        end = min(len(lines), e.lineno + 3)
+        context = '\n'.join(f"{i+1:4d} | {lines[i]}" for i in range(start, end))
+        
+        error_msg = (
+            f"Failed to parse JSON from '{path}':\n"
+            f"Error: {e.msg} at line {e.lineno}, column {e.colno}\n"
+            f"Problematic line: {error_line}\n"
+            f"\nContext:\n{context}\n"
+            f"\nFull content (first 500 chars):\n{raw[:500]}"
+        )
+        raise ValueError(error_msg) from e
 
 
 def write_json(files: Dict[str, str], path: str, obj: Any) -> Dict[str, str]:

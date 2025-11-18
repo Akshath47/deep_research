@@ -41,12 +41,15 @@ def read_file(
     offset: int = 0,
     limit: int = 2000,
 ) -> str:
+    # Normalize path by removing leading slash for consistency
+    normalized_path = file_path.lstrip('/')
+    
     mock_filesystem = state.get("files", {})
-    if file_path not in mock_filesystem:
+    if normalized_path not in mock_filesystem:
         return f"Error: File '{file_path}' not found"
 
-    # Get file content
-    content = mock_filesystem[file_path]
+    # Get file content using normalized path
+    content = mock_filesystem[normalized_path]
 
     # Handle empty file
     if not content or content.strip() == "":
@@ -86,8 +89,56 @@ def write_file(
     state: Annotated[DeepAgentState, InjectedState],
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command:
+    import json
+    import re
+    
+    # Normalize path by removing leading slash for consistency
+    normalized_path = file_path.lstrip('/')
+    
+    # Special handling for JSON files - validate and clean
+    if normalized_path.endswith('.json'):
+        # Remove markdown code fences if present
+        cleaned_content = content.strip()
+        if cleaned_content.startswith('```'):
+            # Extract content between code fences
+            lines = cleaned_content.split('\n')
+            # Remove first line (```json or ```)
+            lines = lines[1:]
+            # Remove last line if it's closing fence
+            if lines and lines[-1].strip() == '```':
+                lines = lines[:-1]
+            cleaned_content = '\n'.join(lines).strip()
+        
+        # Validate JSON and provide helpful error message
+        try:
+            parsed = json.loads(cleaned_content)
+            # Re-serialize to ensure valid formatting
+            content = json.dumps(parsed, indent=2, ensure_ascii=False)
+        except json.JSONDecodeError as e:
+            lines = cleaned_content.split('\n')
+            error_line = lines[e.lineno - 1] if e.lineno <= len(lines) else "N/A"
+            
+            error_msg = (
+                f"Error: Invalid JSON in {file_path}\n"
+                f"Error: {e.msg} at line {e.lineno}, column {e.colno}\n"
+                f"Problematic line: {error_line}\n\n"
+                f"Common issues:\n"
+                f"- Trailing commas after last array/object item\n"
+                f"- Unquoted property names\n"
+                f"- Comments (not allowed in JSON)\n"
+                f"- Single quotes instead of double quotes\n\n"
+                f"Please fix the JSON and try again."
+            )
+            return Command(
+                update={
+                    "messages": [
+                        ToolMessage(error_msg, tool_call_id=tool_call_id)
+                    ],
+                }
+            )
+    
     files = state.get("files", {})
-    files[file_path] = content
+    files[normalized_path] = content
     return Command(
         update={
             "files": files,
@@ -108,13 +159,16 @@ def edit_file(
     replace_all: bool = False,
 ) -> Union[Command, str]:
     """Write to a file."""
+    # Normalize path by removing leading slash for consistency
+    normalized_path = file_path.lstrip('/')
+    
     mock_filesystem = state.get("files", {})
     # Check if file exists in mock filesystem
-    if file_path not in mock_filesystem:
+    if normalized_path not in mock_filesystem:
         return f"Error: File '{file_path}' not found"
 
-    # Get current file content
-    content = mock_filesystem[file_path]
+    # Get current file content using normalized path
+    content = mock_filesystem[normalized_path]
 
     # Check if old_string exists in the file
     if old_string not in content:
@@ -139,8 +193,8 @@ def edit_file(
         )  # Replace only first occurrence
         result_msg = f"Successfully replaced string in '{file_path}'"
 
-    # Update the mock filesystem
-    mock_filesystem[file_path] = new_content
+    # Update the mock filesystem using normalized path
+    mock_filesystem[normalized_path] = new_content
     return Command(
         update={
             "files": mock_filesystem,
