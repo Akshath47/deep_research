@@ -8,11 +8,15 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import threading
 from langgraph.graph import StateGraph, END
 from langgraph.types import Send
 from state import ResearchFlowState, ResearcherState, read_json
 from agents.researcher import researcher_agent
 from typing import Dict, Any, List
+
+# Semaphore to limit concurrent researcher executions to 2
+_researcher_semaphore = threading.Semaphore(2)
 
 
 def map_each_subquery(state: ResearcherState):
@@ -42,10 +46,44 @@ def map_subqueries_node(state: ResearcherState) -> Dict[str, Any]:
 def run_researcher(state: ResearcherState) -> Dict[str, Any]:
     """
     Run the researcher agent (CustomSubAgent with scraper → summarizer subgraph).
-    """    
-    result = researcher_agent["graph"].invoke(state)
+    Uses semaphore to limit concurrent executions to 2.
+    """
+    import traceback
     
-    return {"files": result.get("files", {})}
+    subquery_idx = state.get("current_subquery_index", "unknown")
+    subquery = state.get("current_subquery", {})
+    query_text = subquery.get("query", "unknown") if isinstance(subquery, dict) else str(subquery)
+    
+    print(f"[RESEARCHER HUB] Starting researcher for subquery {subquery_idx}: {query_text[:50]}...")
+    
+    _researcher_semaphore.acquire()
+    try:
+        result = researcher_agent["graph"].invoke(state)
+        print(f"[RESEARCHER HUB] ✓ Subquery {subquery_idx} completed successfully")
+        return {"files": result.get("files", {})}
+    except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        print(f"[RESEARCHER HUB] ✗ Subquery {subquery_idx} FAILED with {error_type}: {error_msg}")
+        print(f"[RESEARCHER HUB] Traceback:\n{traceback.format_exc()}")
+        
+        # Create error file instead of crashing
+        files = state.get("files", {})
+        files[f"errors/subquery{subquery_idx}_error.txt"] = f"""# Research Error
+        
+Subquery: {query_text}
+Error Type: {error_type}
+Error Message: {error_msg}
+
+Traceback:
+{traceback.format_exc()}
+
+This subquery failed but other researchers continued.
+"""
+        print(f"[RESEARCHER HUB] Returning partial results for subquery {subquery_idx}")
+        return {"files": files}
+    finally:
+        _researcher_semaphore.release()
 
 
 def run_researcher_merge(state: ResearcherState) -> Dict[str, Any]:
