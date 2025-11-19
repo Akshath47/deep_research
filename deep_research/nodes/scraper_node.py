@@ -45,39 +45,92 @@ _scraper_node_agent = create_agent(
 )
 
 def scraper_node(state: ResearcherState) -> Dict[str, Any]:
-    """Scraper node: run Tavily via LLM, process results, and save to files."""    
+    """Scraper node: run Tavily via LLM, process results, and save to files."""
+    import traceback
+    
     subquery = state.get("current_subquery", {})
     idx = state.get("current_subquery_index", 0)
     if not subquery:
         return {"files": state.get("files", {})}
 
-    # Step 1: Use ReAct agent to call Tavily tools and gather information
-    prompt = f"{SCRAPER_PROMPT}\n\nSubquery: {subquery.get('query', '')}"
+    query_text = subquery.get('query', '')
+    print(f"[SCRAPER NODE] Starting scrape for subquery {idx}: {query_text[:50]}...")
+
+    try:
+        # Step 1: Use ReAct agent to call Tavily tools and gather information
+        prompt = f"{SCRAPER_PROMPT}\n\nSubquery: {query_text}"
+
+        # CRITICAL: Limit recursion to prevent token explosion
+        # Most searches should complete in 5-8 tool calls max
+        from langchain_core.runnables.config import RunnableConfig
+        config = RunnableConfig(recursion_limit=10)
+
+        llm_res = _scraper_node_agent.invoke(
+            {"messages": [HumanMessage(content=prompt)]},
+            config=config
+        )
+        messages = llm_res.get("messages", [])
+    except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        print(f"[SCRAPER NODE] ✗ Tool execution failed for subquery {idx}: {error_type}: {error_msg}")
+        
+        # Return empty results with error metadata instead of crashing
+        files = state.get("files", {})
+        files[f"raw_data/subquery{idx}_error.txt"] = f"""# Scraper Error
+
+Subquery: {query_text}
+Error Type: {error_type}
+Error Message: {error_msg}
+
+This search failed but processing continues with empty results.
+"""
+        return {
+            "files": files,
+            "search_metadata": {
+                "subquery_index": idx,
+                "subquery_info": subquery,
+                "search_terms_used": [query_text],
+                "results_count": 0,
+                "raw_data_files": [],
+                "error": error_msg
+            }
+        }
     
-    llm_res = _scraper_node_agent.invoke({"messages": [HumanMessage(content=prompt)]})
-    messages = llm_res.get("messages", [])
+    # DEBUG: Log message count and approximate token usage
+    total_chars = sum(len(str(msg.content)) for msg in messages if hasattr(msg, 'content'))
+    print(f"[SCRAPER DEBUG] ReAct agent returned {len(messages)} messages, ~{total_chars} chars (~{total_chars//4} tokens)")
 
     # Step 2: Extract tool results from messages and structure them with a second LLM call
+    # CRITICAL FIX: Don't pass full messages (351k tokens!), extract only essential data
     
-    # Build a summary of what the ReAct agent found
-    extraction_prompt = f"""Based on the search results in this conversation, extract and structure the information.
+    tool_results_summary = _extract_tool_results_summary(messages)
+    print(f"[SCRAPER DEBUG] Extracted tool results: {len(tool_results_summary)} chars (~{len(tool_results_summary)//4} tokens)")
+    
+    # Build a concise prompt with just the extracted data
+    extraction_prompt = f"""Based on these search results, extract and structure the information.
 
 Original subquery: {subquery.get('query', '')}
 
-Review all tool call results in the conversation history and create a structured output with:
-- A list of the best search results found (URL, title, snippet, content, published date if available, and relevance score)
+Tool Results:
+{tool_results_summary}
+
+Create a structured output with:
+- A list of the best 5-8 search results (URL, title, snippet, content, published date if available, and relevance score)
 - The search terms that were actually used
 
-Return exactly 5-8 of the most relevant, high-quality results."""
+Focus on the most relevant, high-quality results."""
 
     # Use structured output to get ScraperOutput
     structured_llm = llm.with_structured_output(ScraperOutput)
     
     try:
-        scraper_output = structured_llm.invoke(messages + [HumanMessage(content=extraction_prompt)])
+        # Pass only the minimal context, not the entire conversation history
+        scraper_output = structured_llm.invoke([HumanMessage(content=extraction_prompt)])
         out = scraper_output.model_dump()
+        print(f"[SCRAPER NODE] ✓ Successfully structured {len(out.get('results', []))} results for subquery {idx}")
     except (ValidationError, Exception) as e:
-        print(f"Warning: Failed to structure scraper output: {e}")
+        print(f"[SCRAPER NODE] Warning: Failed to structure scraper output for subquery {idx}: {e}")
         out = {"results": [], "terms_used": [subquery.get("query", "")]}
 
     # Normalize into SearchResult objects
@@ -134,6 +187,46 @@ Subquery: {subquery.get('query', '')}
     files[f"raw_data/subquery{idx}_metadata.json"] = json.dumps(metadata, indent=2)
 
     return {"files": files, "search_metadata": metadata}
+
+
+def _extract_tool_results_summary(messages: List) -> str:
+    """
+    Extract a concise summary of tool call results from the message history.
+    This prevents sending 351k+ tokens to the LLM by extracting only key metadata.
+    """
+    from langchain_core.messages import ToolMessage
+    
+    summaries = []
+    for msg in messages:
+        if isinstance(msg, ToolMessage):
+            try:
+                # Parse the tool result
+                content = msg.content
+                if isinstance(content, str):
+                    import json
+                    data = json.loads(content)
+                else:
+                    data = content
+                
+                # Extract just the key fields, not full content
+                if "results" in data:
+                    for result in data.get("results", [])[:10]:  # Limit to 10 results
+                        summary = {
+                            "url": result.get("url", ""),
+                            "title": result.get("title", "")[:200],  # Truncate title
+                            "snippet": result.get("snippet", "")[:500],  # Truncate snippet
+                            "score": result.get("score", 0.0),
+                            "published_date": result.get("published_date"),
+                        }
+                        # Only include first 1000 chars of content to stay within limits
+                        if "content" in result:
+                            summary["content"] = result["content"][:1000] + "..."
+                        summaries.append(json.dumps(summary))
+            except Exception as e:
+                print(f"Warning: Failed to parse tool message: {e}")
+                continue
+    
+    return "\n\n".join(summaries) if summaries else "No tool results found"
 
 
 def _deduplicate_results(results: List[SearchResult]) -> List[SearchResult]:
