@@ -10,8 +10,10 @@ from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from tavily import TavilyClient
+import time
 
 # Initialize Tavily client once
+# Note: Timeout is handled at the HTTP request level, not in the client init
 tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 # --- Schemas ---
@@ -51,7 +53,7 @@ def tavily_search(
     exclude_domains: Optional[List[str]] = None,
     time_range: Optional[Literal["day", "week", "month", "year"]] = None,
 ) -> Dict[str, Any]:
-    """Run a Tavily web search and return raw JSON results."""
+    """Run a Tavily web search with retry logic and return raw JSON results."""
     args = SearchArgs(
         query=query,
         max_results=max_results,
@@ -61,7 +63,37 @@ def tavily_search(
         exclude_domains=exclude_domains,
         time_range=time_range,
     )
-    return tavily_client.search(**args.model_dump(exclude_none=True))
+    
+    # Retry logic with exponential backoff
+    max_retries = 3
+    base_delay = 2
+    
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            print(f"[TAVILY SEARCH] Attempt {attempt + 1}/{max_retries} for query: {query[:50]}...")
+            result = tavily_client.search(**args.model_dump(exclude_none=True))
+            print(f"[TAVILY SEARCH] ✓ Success on attempt {attempt + 1}")
+            return result
+        except Exception as e:
+            last_error = e
+            error_type = type(e).__name__
+            error_msg = str(e)
+            
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)  # Exponential backoff: 2s, 4s, 8s
+                print(f"[TAVILY SEARCH] ✗ Attempt {attempt + 1} failed ({error_type}: {error_msg}), retrying in {delay}s...")
+                time.sleep(delay)
+    
+    # All retries failed
+    error_type = type(last_error).__name__ if last_error else "Unknown"
+    error_msg = str(last_error) if last_error else "Unknown error"
+    print(f"[TAVILY SEARCH] ✗ All {max_retries} attempts failed for query: {query[:50]}")
+    return {
+        "results": [],
+        "query": query,
+        "error": f"{error_type}: {error_msg}"
+    }
 
 @tool
 def tavily_extract(
@@ -69,9 +101,39 @@ def tavily_extract(
     extract_depth: Literal["basic", "advanced"] = "basic",
     format: Literal["markdown", "text"] = "markdown",
 ) -> Dict[str, Any]:
-    """Extract full content from given URLs using Tavily."""
+    """Extract full content from given URLs using Tavily with retry logic."""
     args = ExtractArgs(urls=urls, extract_depth=extract_depth, format=format)
-    return tavily_client.extract(**args.model_dump())
+    
+    # Retry logic with exponential backoff
+    max_retries = 3
+    base_delay = 2
+    
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            print(f"[TAVILY EXTRACT] Attempt {attempt + 1}/{max_retries} for {len(urls)} URLs...")
+            result = tavily_client.extract(**args.model_dump())
+            print(f"[TAVILY EXTRACT] ✓ Success on attempt {attempt + 1}")
+            return result
+        except Exception as e:
+            last_error = e
+            error_type = type(e).__name__
+            error_msg = str(e)
+            
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)  # Exponential backoff: 2s, 4s, 8s
+                print(f"[TAVILY EXTRACT] ✗ Attempt {attempt + 1} failed ({error_type}: {error_msg}), retrying in {delay}s...")
+                time.sleep(delay)
+    
+    # All retries failed
+    error_type = type(last_error).__name__ if last_error else "Unknown"
+    error_msg = str(last_error) if last_error else "Unknown error"
+    print(f"[TAVILY EXTRACT] ✗ All {max_retries} attempts failed")
+    return {
+        "results": [],
+        "failed_urls": urls,
+        "error": f"{error_type}: {error_msg}"
+    }
 
 # --- Utils ---
 
