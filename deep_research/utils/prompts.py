@@ -744,6 +744,7 @@ Your single deliverable is a publication-ready academic-style report: `draft_rep
 - Use `/summaries/*` as your primary knowledge source.
 - Cross-reference all claims against `factcheck_notes.md`, prioritizing **Verified claims** and following contradiction/weak-source guidance exactly.
 - Consult `/raw_data/*` only as fallback if factcheck notes indicate uncertainty or major gaps.
+- Attribute every discrete claim to its precise supporting source with inline citations to eliminate ambiguity.
 - Produce a structured, rigorous, citation-rich report ready for downstream use.
 
 # Inputs
@@ -775,11 +776,14 @@ Your single deliverable is a publication-ready academic-style report: `draft_rep
    - Write structured academic report using the template below.  
    - Cover all sub-queries.  
    - Maintain academic tone.  
-   - Ensure logical flow across sections.
+   - Ensure logical flow across sections.  
+   - Tie each factual sentence to explicit sources; replace vague generalizations (e.g., "industry commentary") with cited source names.
 6. **Citation System**  
    - Inline citations: numerical `[1], [2], …` as they appear in text.  
    - References section: map numbers to URLs with a short descriptor.  
-   - No uncited claims. No orphaned references.
+   - Cite every factual sentence; when consecutive sentences draw from the same source, repeat the citation to show coverage.
+   - If multiple sources support adjacent claims, place separate citations (e.g., `[1][2]`) so it is clear which source backs which statement.
+   - Replace generic attributions like "experts say" with the specific, cited source responsible for the claim.
 
 # Report Template (mandatory)
 <!-- REPORT_START -->
@@ -824,8 +828,8 @@ For each major sub-query or research area:
 
 ## Quality Standards
 - **Content**: Comprehensive, covers all sub-queries. Only uses validated facts. Contradictions handled exactly as instructed.  
-- **Citations**: Every factual claim has [n]. References complete, no orphans.  
-- **Writing**: Academic tone, clear structure, professional formatting.  
+- **Citations**: Every factual sentence has `[n]`, making it explicit which source supports which claim; references complete, no orphans.  
+- **Writing**: Academic tone, clear structure, professional formatting, no vague generalizations without explicit attribution.  
 - **Transparency**: Acknowledge limitations and uncertainties.
 
 ## Error Handling
@@ -892,6 +896,8 @@ Your deliverables are: `final_paper.md` (polished report) and `gap_list.json` (s
    - Are technical terms properly explained?
    - Do transitions between sections flow naturally?
    - Are citations properly formatted and relevant?
+   - Does every factual sentence have an inline citation identifying the exact supporting source?
+   - Are generalized phrases (e.g., "industry commentary" or "experts say") tied to specific, cited sources?
 2. Identify sections that need:
    - Better organization or restructuring
    - Clearer explanations of complex concepts
@@ -936,7 +942,9 @@ For **Category A gaps only**:
    - All minor gaps filled (Category A)
    - Improved clarity and structure
    - Consistent formatting and citations
+   - Inline citations immediately following each factual sentence and explicitly pointing to the supporting source(s)
    - Professional academic tone throughout
+   - Vague generalizations replaced with precise, cited source references or documented as gaps
 2. Preserve all original citations and add new ones for gap-filling content
 3. Ensure the report maintains source fidelity and accuracy
 
@@ -1040,7 +1048,9 @@ Create `gap_list.json` with the following structure:
 Before finalizing, verify:
 - [ ] Every sub-query from subqueries.json is addressed in the completeness check
 - [ ] All filled gaps have explicit source citations
+- [ ] Every factual sentence has an inline citation pointing to a specific, named source
 - [ ] No speculative or assumed information added
+- [ ] Generalized statements are either tied to explicit, cited sources or documented as gaps
 - [ ] Gap list is comprehensive and actionable
 - [ ] Completeness score is accurately calculated
 - [ ] Final report maintains academic standards
@@ -1109,6 +1119,7 @@ Missing specific examples that are available in summaries.
 # Quality Standards
 - Completeness: every sub-query addressed or listed in gap_list.json  
 - Clarity: all sections coherent, transitions smooth  
+- Citations: every factual sentence has an inline reference tied to a specific source; no ambiguous attributions  
 - Accuracy: no speculative or fabricated info  
 - Format: valid Markdown and JSON outputs only  
 - Deliverables: exactly two files — `final_paper.md`, `gap_list.json`
