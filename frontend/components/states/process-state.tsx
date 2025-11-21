@@ -120,123 +120,130 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
   }, [threadId, onComplete]);
 
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Query Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-2xl font-semibold text-foreground">
-              {query}
-            </h2>
-            <Badge
-              variant="secondary"
-              className="bg-[#3182CE] text-white hover:bg-[#2C5AA0]"
-            >
-              Researching...
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Thread ID: {threadId}
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 -left-10 h-72 w-72 rounded-full bg-[#3182CE]/15 blur-3xl" />
+        <div className="absolute inset-y-0 right-[-18%] h-[140%] w-1/2 rotate-6 bg-[linear-gradient(135deg,rgba(49,130,206,0.12),transparent_45%)] blur-3xl" />
+        <div className="absolute bottom-[-30%] left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-white/5 blur-[110px]" />
+      </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Overall Progress
-            </span>
-            <span className="text-sm font-medium text-[#3182CE]">
-              {progress}%
-            </span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        {/* Activity Feed */}
-        <Card className="p-6 bg-card shadow-lg border-border">
-          <h3 className="text-lg font-semibold text-foreground mb-6">
-            Live Activity Feed
-          </h3>
-
-          <div className="space-y-4">
-            {events.length === 0 && (
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
-                <span>Initializing research...</span>
-              </div>
-            )}
-
-            {events.map((event, idx) => {
-              const Icon = AGENT_ICONS[event.agent] || Search;
-              const isActive = event.agent === currentAgent;
-              const isCompleted = idx < events.length - 1 || status === "completed";
-
-              return (
-                <div
-                  key={idx}
-                  className={`flex items-start gap-4 p-4 rounded-lg transition-all ${
-                    isActive
-                      ? "bg-muted border-l-4 border-[#3182CE]"
-                      : "opacity-60"
-                  }`}
+      <div className="relative z-10 px-4 py-12">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="space-y-4 px-1">
+            {/* Query Header */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge
+                  variant="secondary"
+                  className="rounded-full bg-[#3182CE] px-3 py-1 text-white shadow-lg shadow-[#3182CE]/25 hover:bg-[#2C5AA0]"
                 >
-                  <div className="flex-shrink-0 mt-1">
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-6 w-6 text-green-600" />
-                    ) : (
-                      <Icon
-                        className={`h-6 w-6 ${
-                          isActive ? "text-[#3182CE] animate-pulse" : "text-muted-foreground"
-                        }`}
-                      />
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground">
-                        {event.agent_display_name}
-                      </h4>
-                      {isActive && (
-                        <div className="flex gap-1">
-                          <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse" />
-                          <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse delay-75" />
-                          <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse delay-150" />
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {event.agent_description}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(event.timestamp).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Current Agent Indicator */}
-            {status === "running" && currentAgent && (
-              <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border-l-4 border-[#3182CE]">
-                <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
-                <span className="text-sm text-foreground">
-                  Processing with {currentAgent}...
+                  Working
+                </Badge>
+                <span className="rounded-full bg-muted/60 px-3 py-1 text-xs text-muted-foreground">
+                  Thread {threadId}
                 </span>
               </div>
-            )}
-          </div>
-        </Card>
+              <h2 className="text-2xl font-semibold text-foreground leading-tight">
+                {query}
+              </h2>
+            </div>
 
-        {/* Status Messages */}
-        {status === "error" && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">
-              An error occurred during research. Please try again.
-            </p>
+            {/* Progress Bar */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-muted-foreground">Progress</span>
+                <span className="rounded-full bg-[#3182CE]/15 px-3 py-1 font-semibold text-[#3182CE] shadow-inner shadow-[#3182CE]/20">
+                  {progress}%
+                </span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
           </div>
-        )}
+
+          {/* Activity Feed */}
+          <Card className="rounded-3xl border border-border/70 bg-card/80 p-6 shadow-2xl shadow-black/25 backdrop-blur">
+            <div className="flex items-center gap-2 mb-6">
+              <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
+              <h3 className="text-lg font-semibold text-foreground">
+                Live Activity
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {events.length === 0 && (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
+                  <span>Booting up the workflow…</span>
+                </div>
+              )}
+
+              {events.map((event, idx) => {
+                const Icon = AGENT_ICONS[event.agent] || Search;
+                const isActive = event.agent === currentAgent;
+                const isCompleted = idx < events.length - 1 || status === "completed";
+
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-start gap-4 rounded-2xl border border-transparent bg-muted/30 p-4 transition-all ${
+                      isActive
+                        ? "border-[#3182CE]/60 shadow-lg shadow-[#3182CE]/10"
+                        : "opacity-70"
+                    }`}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-6 w-6 text-green-500" />
+                      ) : (
+                        <Icon
+                          className={`h-6 w-6 ${
+                            isActive ? "text-[#3182CE] animate-pulse" : "text-muted-foreground"
+                          }`}
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-foreground">
+                          {event.agent_display_name}
+                        </h4>
+                        {isActive && (
+                          <div className="flex gap-1">
+                            <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse" />
+                            <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse delay-75" />
+                            <span className="h-2 w-2 bg-[#3182CE] rounded-full animate-pulse delay-150" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {event.agent_description}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(event.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {status === "running" && currentAgent && (
+                <div className="flex items-center gap-3 rounded-2xl border border-[#3182CE]/60 bg-muted/40 p-4 shadow-lg shadow-[#3182CE]/10">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
+                  <span className="text-sm text-foreground">
+                    Processing with {currentAgent}...
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {status === "error" && (
+            <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">
+              An error occurred during research. Please try again.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
