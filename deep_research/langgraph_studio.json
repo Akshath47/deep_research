@@ -1,0 +1,58 @@
+{
+  "title": "Deep Research Agent",
+  "description": "Multi-agent research system with clarifier, decomposer, strategist, researcher, fact-checker, synthesizer, and reviewer agents",
+  "graphs": {
+    "research_workflow": {
+      "path": "./graphs/workflow.py:app",
+      "description": "Main research workflow orchestrating all agents",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "object",
+            "description": "Virtual filesystem with query.txt containing the research question",
+            "properties": {
+              "query.txt": {
+                "type": "string",
+                "description": "The research query to investigate"
+              }
+            },
+            "required": ["query.txt"]
+          }
+        },
+        "required": ["files"]
+      }
+    },
+    "researcher_hub": {
+      "path": "./graphs/researcher_hub.py:researcher_hub_graph",
+      "description": "Parallel research execution subgraph",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "object",
+            "description": "Virtual filesystem with subqueries.json",
+            "properties": {
+              "subqueries.json": {
+                "type": "string",
+                "description": "JSON array of sub-questions to research"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "env": {
+    "file": ".env"
+  },
+  "python_version": "3.11",
+  "dependencies": {
+    "file": "requirements.txt"
+  },
+  "visualization": {
+    "show_subgraphs": true,
+    "show_state": true,
+    "layout": "hierarchical"
+  }
+}

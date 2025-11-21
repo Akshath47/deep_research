@@ -1,0 +1,92 @@
+# LangGraph Studio Configuration
+# This file configures LangGraph Studio for local development and visualization
+
+# Project metadata
+name: "Deep Research Agent"
+description: "Multi-agent research system with streaming API support"
+version: "0.1.0"
+
+# Python configuration
+python:
+  version: "3.11"
+  dependencies: "deep_research/requirements.txt"
+
+# Graphs to load
+graphs:
+  - name: "research_workflow"
+    path: "deep_research/graphs/workflow.py:app"
+    description: "Main research workflow"
+
+  - name: "researcher_hub"
+    path: "deep_research/graphs/researcher_hub.py:researcher_hub_graph"
+    description: "Parallel researcher subgraph"
+
+# Environment variables
+env:
+  file: "deep_research/.env"
+  required:
+    - OPENAI_API_KEY
+    - TAVILY_API_KEY
+  optional:
+    - ANTHROPIC_API_KEY
+
+# API Server configuration
+server:
+  host: "0.0.0.0"
+  port: 8123
+  cors:
+    enabled: true
+    origins:
+      - "http://localhost:3000"
+      - "http://localhost:3001"
+
+# Studio UI configuration
+studio:
+  # Show detailed state in UI
+  show_state: true
+
+  # Show subgraph execution
+  show_subgraphs: true
+
+  # Layout preference
+  layout: "hierarchical"
+
+  # Enable streaming in UI
+  streaming:
+    enabled: true
+    modes:
+      - "updates"
+      - "debug"
+
+# Development settings
+dev:
+  # Auto-reload on file changes
+  reload: true
+
+  # Watch these directories
+  watch:
+    - "deep_research/agents"
+    - "deep_research/graphs"
+    - "deep_research/nodes"
+    - "deep_research/tools"
+    - "deep_research/utils"
+
+  # Log level
+  log_level: "info"
+
+# Example inputs for quick testing
+examples:
+  - name: "Simple Query"
+    input:
+      files:
+        query.txt: "What are the latest developments in quantum computing?"
+
+  - name: "Complex Query"
+    input:
+      files:
+        query.txt: "Compare and contrast the economic policies of Keynesian and Austrian schools of thought, including their historical impact and modern applications"
+
+  - name: "Technical Query"
+    input:
+      files:
+        query.txt: "Explain the architecture of transformer models in deep learning, including attention mechanisms and their computational complexity"
