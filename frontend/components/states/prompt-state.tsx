@@ -51,9 +51,6 @@ export function PromptState({ onStartResearch }: PromptStateProps) {
           <h1 className="text-4xl font-semibold text-foreground mb-2">
             Deep Research
           </h1>
-          <p className="text-muted-foreground">
-            AI-powered multi-agent research system
-          </p>
         </div>
 
         {/* Main Input Form */}
