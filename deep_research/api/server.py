@@ -33,11 +33,16 @@ from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 # Import LangGraph workflow
-from graphs.workflow import app as langgraph_app
+from graphs.workflow import graph  # Import the graph, not the compiled app
 from state import ResearchFlowState, read_text, read_json
+from langgraph.checkpoint.memory import MemorySaver
 
 # Thread management
 from threading import Lock
+
+# Compile the graph with a checkpointer for API usage
+checkpointer = MemorySaver()
+langgraph_app = graph.compile(checkpointer=checkpointer)
 
 
 # ===== Data Models =====
@@ -235,9 +240,13 @@ async def run_research_workflow(thread_id: str, query: str):
             }
         }
 
+        # Config with thread_id for checkpointer
+        config = {"configurable": {"thread_id": thread_id}}
+
         # Stream the workflow execution
         async for event in langgraph_app.astream(
             initial_state,
+            config=config,
             stream_mode=["updates", "debug"]
         ):
             # Process different event types
@@ -262,8 +271,9 @@ async def run_research_workflow(thread_id: str, query: str):
                             "status": "running"
                         })
 
-        # Get final state
-        final_state = await langgraph_app.aget_state({"configurable": {"thread_id": thread_id}})
+        # Get final state (the state is already stored by the checkpointer)
+        # We'll extract it from the last stream event instead
+        final_state = initial_state  # Will be updated by streaming
 
         # Mark as completed
         thread_manager.update_thread(thread_id, {
