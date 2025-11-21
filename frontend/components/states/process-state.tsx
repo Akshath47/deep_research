@@ -125,7 +125,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
         {/* Query Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-2xl font-semibold text-[#1A202C]">
+            <h2 className="text-2xl font-semibold text-foreground">
               {query}
             </h2>
             <Badge
@@ -135,7 +135,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
               Researching...
             </Badge>
           </div>
-          <p className="text-sm text-[#4A5568]">
+          <p className="text-sm text-muted-foreground">
             Thread ID: {threadId}
           </p>
         </div>
@@ -143,7 +143,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-[#4A5568]">
+            <span className="text-sm font-medium text-muted-foreground">
               Overall Progress
             </span>
             <span className="text-sm font-medium text-[#3182CE]">
@@ -154,14 +154,14 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
         </div>
 
         {/* Activity Feed */}
-        <Card className="p-6 bg-white shadow-lg border-[#EDF2F7]">
-          <h3 className="text-lg font-semibold text-[#1A202C] mb-6">
+        <Card className="p-6 bg-card shadow-lg border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-6">
             Live Activity Feed
           </h3>
 
           <div className="space-y-4">
             {events.length === 0 && (
-              <div className="flex items-center gap-3 text-[#4A5568]">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
                 <span>Initializing research...</span>
               </div>
@@ -177,7 +177,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
                   key={idx}
                   className={`flex items-start gap-4 p-4 rounded-lg transition-all ${
                     isActive
-                      ? "bg-[#EDF2F7] border-l-4 border-[#3182CE]"
+                      ? "bg-muted border-l-4 border-[#3182CE]"
                       : "opacity-60"
                   }`}
                 >
@@ -187,7 +187,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
                     ) : (
                       <Icon
                         className={`h-6 w-6 ${
-                          isActive ? "text-[#3182CE] animate-pulse" : "text-[#4A5568]"
+                          isActive ? "text-[#3182CE] animate-pulse" : "text-muted-foreground"
                         }`}
                       />
                     )}
@@ -195,7 +195,7 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-[#1A202C]">
+                      <h4 className="font-semibold text-foreground">
                         {event.agent_display_name}
                       </h4>
                       {isActive && (
@@ -206,10 +206,10 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-[#4A5568]">
+                    <p className="text-sm text-muted-foreground">
                       {event.agent_description}
                     </p>
-                    <p className="text-xs text-[#4A5568] mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(event.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -219,9 +219,9 @@ export function ProcessState({ query, threadId, onComplete }: ProcessStateProps)
 
             {/* Current Agent Indicator */}
             {status === "running" && currentAgent && (
-              <div className="flex items-center gap-3 p-4 bg-[#EDF2F7] rounded-lg border-l-4 border-[#3182CE]">
+              <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border-l-4 border-[#3182CE]">
                 <Loader2 className="h-5 w-5 animate-spin text-[#3182CE]" />
-                <span className="text-sm text-[#1A202C]">
+                <span className="text-sm text-foreground">
                   Processing with {currentAgent}...
                 </span>
               </div>

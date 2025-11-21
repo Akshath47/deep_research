@@ -58,11 +58,11 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Action Bar */}
-        <div className="sticky top-0 z-10 bg-[#F8F9FA] pb-4 mb-6">
+        <div className="sticky top-0 z-10 bg-background pb-4 mb-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
-              <h2 className="text-2xl font-semibold text-[#1A202C]">
+              <h2 className="text-2xl font-semibold text-foreground">
                 Research Complete
               </h2>
               <Badge variant="outline" className="border-green-600 text-green-600">
@@ -112,7 +112,7 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
           </div>
 
           {/* Metadata */}
-          <div className="flex items-center gap-4 mt-4 text-sm text-[#4A5568]">
+          <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <span>
               Thread ID: <code className="text-xs">{result.thread_id}</code>
             </span>
@@ -128,36 +128,36 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
         </div>
 
         {/* Main Report */}
-        <Card className="p-8 bg-white shadow-lg border-[#EDF2F7] mb-6">
+        <Card className="p-8 bg-card shadow-lg border-border mb-6">
           <article className="prose prose-slate max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ children }) => (
-                  <h1 className="text-3xl font-bold text-[#1A202C] mb-4 mt-6">
+                  <h1 className="text-3xl font-bold text-foreground mb-4 mt-6">
                     {children}
                   </h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 className="text-2xl font-semibold text-[#1A202C] mb-3 mt-5">
+                  <h2 className="text-2xl font-semibold text-foreground mb-3 mt-5">
                     {children}
                   </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="text-xl font-semibold text-[#1A202C] mb-2 mt-4">
+                  <h3 className="text-xl font-semibold text-foreground mb-2 mt-4">
                     {children}
                   </h3>
                 ),
                 p: ({ children }) => (
-                  <p className="text-[#1A202C] leading-7 mb-4">{children}</p>
+                  <p className="text-foreground leading-7 mb-4">{children}</p>
                 ),
                 ul: ({ children }) => (
-                  <ul className="list-disc list-inside text-[#1A202C] mb-4 space-y-2">
+                  <ul className="list-disc list-inside text-foreground mb-4 space-y-2">
                     {children}
                   </ul>
                 ),
                 ol: ({ children }) => (
-                  <ol className="list-decimal list-inside text-[#1A202C] mb-4 space-y-2">
+                  <ol className="list-decimal list-inside text-foreground mb-4 space-y-2">
                     {children}
                   </ol>
                 ),
@@ -167,17 +167,17 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
                 code: ({ children, className }) => {
                   const isInline = !className;
                   return isInline ? (
-                    <code className="bg-[#EDF2F7] text-[#3182CE] px-1.5 py-0.5 rounded text-sm">
+                    <code className="bg-muted text-[#3182CE] px-1.5 py-0.5 rounded text-sm">
                       {children}
                     </code>
                   ) : (
-                    <code className="block bg-[#1A202C] text-[#F8F9FA] p-4 rounded-lg overflow-x-auto text-sm">
+                    <code className="block bg-background text-foreground p-4 rounded-lg overflow-x-auto text-sm border border-border">
                       {children}
                     </code>
                   );
                 },
                 blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-[#3182CE] pl-4 italic text-[#4A5568] my-4">
+                  <blockquote className="border-l-4 border-[#3182CE] pl-4 italic text-muted-foreground my-4">
                     {children}
                   </blockquote>
                 ),
@@ -200,15 +200,15 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
 
         {/* Sub-Questions */}
         {result.subqueries && result.subqueries.length > 0 && (
-          <Card className="p-6 bg-white shadow-lg border-[#EDF2F7] mb-6">
-            <h3 className="text-lg font-semibold text-[#1A202C] mb-4">
+          <Card className="p-6 bg-card shadow-lg border-border mb-6">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               Research Sub-Questions
             </h3>
             <ul className="space-y-2">
               {result.subqueries.map((subquery, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-2 text-[#4A5568]"
+                  className="flex items-start gap-2 text-muted-foreground"
                 >
                   <span className="text-[#3182CE] font-semibold">{idx + 1}.</span>
                   <span>{subquery}</span>
@@ -220,10 +220,10 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
 
         {/* Sources/Citations */}
         {result.citations && result.citations.length > 0 && (
-          <Card className="p-6 bg-white shadow-lg border-[#EDF2F7]">
+          <Card className="p-6 bg-card shadow-lg border-border">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="sources">
-                <AccordionTrigger className="text-lg font-semibold text-[#1A202C]">
+                <AccordionTrigger className="text-lg font-semibold text-foreground">
                   Sources Used ({result.citations.length})
                 </AccordionTrigger>
                 <AccordionContent>
@@ -231,12 +231,12 @@ export function ResultState({ result, onNewSearch }: ResultStateProps) {
                     {result.citations.map((citation, idx) => (
                       <div
                         key={idx}
-                        className="p-4 bg-[#F8F9FA] rounded-lg border border-[#EDF2F7]"
+                        className="p-4 bg-muted rounded-lg border border-border"
                       >
                         <p className="text-sm font-medium text-[#3182CE] mb-2">
                           {citation.file}
                         </p>
-                        <div className="text-sm text-[#4A5568] max-h-40 overflow-y-auto">
+                        <div className="text-sm text-muted-foreground max-h-40 overflow-y-auto">
                           <ReactMarkdown>{citation.content}</ReactMarkdown>
                         </div>
                       </div>

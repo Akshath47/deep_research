@@ -64,7 +64,7 @@ export default function ResearchInterface() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-background">
       {uiState === "prompt" && (
         <PromptState onStartResearch={handleStartResearch} />
       )}

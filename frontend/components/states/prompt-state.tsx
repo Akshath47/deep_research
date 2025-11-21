@@ -48,10 +48,10 @@ export function PromptState({ onStartResearch }: PromptStateProps) {
       <div className="w-full max-w-2xl">
         {/* Logo/Header */}
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-semibold text-[#1A202C] mb-2">
+          <h1 className="text-4xl font-semibold text-foreground mb-2">
             Deep Research
           </h1>
-          <p className="text-[#4A5568]">
+          <p className="text-muted-foreground">
             AI-powered multi-agent research system
           </p>
         </div>
@@ -65,9 +65,9 @@ export function PromptState({ onStartResearch }: PromptStateProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               disabled={isLoading}
-              className="h-16 px-6 pr-16 text-lg shadow-lg border-[#EDF2F7] focus:border-[#3182CE] focus:ring-[#3182CE] rounded-2xl"
+              className="h-16 px-6 pr-16 text-lg shadow-lg bg-card border-border focus:border-[#3182CE] focus:ring-[#3182CE] rounded-2xl text-foreground placeholder:text-muted-foreground"
             />
-            <Search className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-[#4A5568]" />
+            <Search className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           </div>
 
           <Button
@@ -80,14 +80,14 @@ export function PromptState({ onStartResearch }: PromptStateProps) {
         </form>
 
         {/* Sub-text */}
-        <p className="mt-8 text-center text-sm text-[#4A5568]">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           Deep research may take several minutes. The agent will browse, read, and
           synthesize multiple sources.
         </p>
 
         {/* Example Queries */}
         <div className="mt-12">
-          <p className="text-sm font-medium text-[#4A5568] mb-4">
+          <p className="text-sm font-medium text-muted-foreground mb-4">
             Example queries:
           </p>
           <div className="space-y-2">
@@ -99,7 +99,7 @@ export function PromptState({ onStartResearch }: PromptStateProps) {
               <button
                 key={idx}
                 onClick={() => setQuery(example)}
-                className="block w-full text-left px-4 py-3 text-sm text-[#4A5568] bg-white hover:bg-[#EDF2F7] rounded-lg transition-colors"
+                className="block w-full text-left px-4 py-3 text-sm text-foreground bg-card hover:bg-muted rounded-lg transition-colors border border-border"
               >
                 {example}
               </button>
